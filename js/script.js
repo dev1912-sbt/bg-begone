@@ -457,6 +457,12 @@ const App = {
         if (tool !== 'magic') {
             this.activeMagicWand = null;
         }
+
+        // Reset cursor state immediately on tool switch
+        const cursor = document.getElementById('custom-cursor');
+        cursor.classList.add('hidden');
+        document.body.style.cursor = 'default';
+        if (this.canvas) this.canvas.style.cursor = '';
         
         document.querySelectorAll('.tool-btn').forEach(b => {
             b.classList.remove('bg-slate-700', 'text-white');
@@ -630,7 +636,12 @@ const App = {
 
     handleMouseMove(e) {
         const cursor = document.getElementById('custom-cursor');
-        const isOverCanvas = e.target === this.canvas || e.target.closest('#viewport');
+        // Define UI zones where we want the system cursor
+        const isOverUI = e.target.closest('#control-island') || 
+                        e.target.closest('#zoom-controls') || 
+                        e.target.closest('header') || 
+                        e.target.closest('#slider-popup') ||
+                        e.target.closest('#helpModal');
 
         // Handle Brush Resizing
         if (this.isResizingBrush) {
@@ -650,10 +661,14 @@ const App = {
         }
 
         // Update Custom Cursor
-        if (this.img && (this.currentTool === 'manual' || this.currentTool === 'refine') && (isOverCanvas || this.isResizingBrush)) {
+        // Show if: Image loaded AND Tool is Brush/Refine AND (Not over UI OR Resizing)
+        if (this.img && (this.currentTool === 'manual' || this.currentTool === 'refine') && (!isOverUI || this.isResizingBrush)) {
             cursor.classList.remove('hidden');
             cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
-            this.canvas.style.cursor = 'none';
+            
+            // Hide system cursor globally so it works on body too
+            document.body.style.cursor = 'none';
+            if (this.canvas) this.canvas.style.cursor = 'none';
             
             const size = this.currentTool === 'refine' ? this.settings.refineSize : this.settings.brushSize;
             const displaySize = size * this.scale;
@@ -661,7 +676,8 @@ const App = {
             cursor.style.height = `${displaySize}px`;
         } else {
             cursor.classList.add('hidden');
-            this.canvas.style.cursor = 'default';
+            document.body.style.cursor = 'default';
+            if (this.canvas) this.canvas.style.cursor = ''; // Revert to CSS (crosshair)
         }
 
         if (this.panning) {
