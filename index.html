@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Begone | Advanced Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="h-14 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4 shrink-0 z-20">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-layer-group text-theme text-xl"></i>
+            <h1 class="font-semibold text-lg tracking-tight">BG<span class="text-theme">Remover</span> Pro</h1>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <input type="file" id="imageInput" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('imageInput').click()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2" data-tooltip="Import an image to start editing">
+                <i class="fas fa-folder-open"></i> Open Image
+            </button>
+            <button id="downloadBtn" class="btn-primary px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" data-tooltip="Save your masterpiece as PNG">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Sidebar: Tools -->
+        <aside class="w-72 bg-slate-800 border-r border-slate-700 flex flex-col shrink-0 z-10 overflow-y-auto">
+            
+            <!-- Tool Selection -->
+            <div class="p-4 border-b border-slate-700">
+                <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">Modes</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="tool-manual" class="tool-btn active bg-slate-700 border border-transparent text-slate-300 p-3 rounded flex flex-col items-center gap-2 transition-all" data-tooltip="Erase background manually with a brush">
+                        <i class="fas fa-eraser text-xl"></i>
+                        <span class="text-xs">Manual Brush</span>
+                    </button>
+                    <button id="tool-magic" class="tool-btn bg-slate-700 border border-transparent hover:bg-slate-600 text-slate-300 p-3 rounded flex flex-col items-center gap-2 transition-all" data-tooltip="Auto-remove connected colors">
+                        <i class="fas fa-wand-magic-sparkles text-xl"></i>
+                        <span class="text-xs">Magic Wand</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contextual Options: Brush -->
+            <div id="options-manual" class="p-4 border-b border-slate-700 space-y-4">
+                <h3 class="text-xs font-bold text-slate-400 uppercase">Brush Settings</h3>
+                
+                <div class="space-y-1" data-tooltip="Adjust brush diameter">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Size</span>
+                        <span id="val-size">50px</span>
+                    </div>
+                    <input type="range" id="brush-size" min="1" max="200" value="50">
+                </div>
+
+                <div class="space-y-1" data-tooltip="Softness of the brush edges">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Feather (Softness)</span>
+                        <span id="val-feather">50%</span>
+                    </div>
+                    <input type="range" id="brush-feather" min="0" max="100" value="50">
+                </div>
+
+                <div class="space-y-1" data-tooltip="Strength of the eraser">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Opacity</span>
+                        <span id="val-opacity">100%</span>
+                    </div>
+                    <input type="range" id="brush-opacity" min="1" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- Contextual Options: Magic Wand -->
+            <div id="options-magic" class="p-4 border-b border-slate-700 space-y-4 hidden">
+                <h3 class="text-xs font-bold text-slate-400 uppercase">Magic Wand Settings</h3>
+                <p class="text-xs text-slate-500 italic">Click on the image to auto-remove similar adjacent colors.</p>
+
+                <div class="space-y-1" data-tooltip="How strictly colors must match">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Fuzziness (Tolerance)</span>
+                        <span id="val-tolerance">20</span>
+                    </div>
+                    <input type="range" id="magic-tolerance" min="0" max="100" value="20">
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>Strict</span>
+                        <span>Loose</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-1" data-tooltip="Smooths jagged edges (Choke)">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Smoothness</span>
+                        <span id="val-smoothness">0</span>
+                    </div>
+                    <input type="range" id="magic-smoothness" min="0" max="20" value="0">
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>Sharp</span>
+                        <span>Round</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1" data-tooltip="Transparency of removed area">
+                    <div class="flex justify-between text-xs text-slate-300">
+                        <span>Removal Opacity</span>
+                        <span id="val-magic-opacity">100%</span>
+                    </div>
+                    <input type="range" id="magic-opacity" min="1" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- History Actions -->
+            <div class="p-4 mt-auto">
+                <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">History</h3>
+                <div class="flex gap-2 mb-4">
+                    <button id="undoBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded text-sm disabled:opacity-30 disabled:cursor-not-allowed" data-tooltip="Ctrl+Z">
+                        <i class="fas fa-undo mr-1"></i> Undo
+                    </button>
+                    <button id="redoBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded text-sm disabled:opacity-30 disabled:cursor-not-allowed" data-tooltip="Ctrl+Y">
+                        <i class="fas fa-redo mr-1"></i> Redo
+                    </button>
+                </div>
+                
+                <button id="compareBtn" class="w-full btn-action py-2 rounded text-sm transition-colors mb-2 select-none" data-tooltip="Hold to see original image">
+                    <i class="fas fa-eye mr-1"></i> Hold to Compare
+                </button>
+                
+                <button id="resetBtn" class="w-full border border-red-500/50 text-red-400 hover:bg-red-500/10 py-2 rounded text-sm transition-colors">
+                    Reset Image
+                </button>
+            </div>
+        </aside>
+
+        <!-- Viewport -->
+        <main class="flex-1 relative bg-slate-900 overflow-hidden flex items-center justify-center">
+            
+            <!-- Canvas Container (Applied Transforms here) -->
+            <div id="viewport" class="relative shadow-2xl shadow-black">
+                <!-- Checkered background div -->
+                <div id="bg-layer" class="absolute inset-0 checkered-bg pointer-events-none"></div>
+                <!-- The Canvas -->
+                <canvas id="editorCanvas" width="800" height="600" class="canvas-container relative z-10 block"></canvas>
+            </div>
+
+            <!-- Brush Preview Overlay -->
+            <div id="brush-preview-overlay" class="absolute inset-0 z-40 bg-black/60 flex items-center justify-center opacity-0 hidden">
+                <div id="brush-cursor-preview"></div>
+            </div>
+
+            <!-- Floating Controls -->
+            <div class="absolute bottom-6 right-6 flex items-center gap-2 bg-slate-800 p-2 rounded-lg shadow-lg border border-slate-700 z-30">
+                <button id="zoomOut" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom Out"><i class="fas fa-minus"></i></button>
+                <span id="zoomLevel" class="text-xs font-mono w-12 text-center">100%</span>
+                <button id="zoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom In"><i class="fas fa-plus"></i></button>
+                <div class="w-px h-4 bg-slate-600 mx-1"></div>
+                <button id="fitScreen" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" title="Fit to Screen" data-tooltip="Fit to Screen"><i class="fas fa-compress"></i></button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none z-0">
+                <i class="fas fa-image text-6xl mb-4 opacity-50"></i>
+                <p class="text-xl font-semibold">No image loaded</p>
+                <p class="text-base opacity-90">Upload an image to start removing backgrounds</p>
+            </div>
+
+            <!-- Loader -->
+            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-slate-900/50 hidden z-50">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-circle-notch fa-spin text-4xl text-theme mb-2"></i>
+                    <span class="text-sm font-semibold">Processing Pixels...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- The Single Global Tooltip Element -->
+    <div id="global-tooltip"></div>
+
+    <script src="script.js"></script>
+    <!-- <script>
+        /**
+         * Core Application Logic
+         */
+        const App = {
+            canvas: document.getElementById('editorCanvas'),
+            ctx: document.getElementById('editorCanvas').getContext('2d', { willReadFrequently: true }),
+            viewport: document.getElementById('viewport'),
+            bgLayer: document.getElementById('bg-layer'),
+            
+            // State
+            img: null,
+            originalImageData: null, // For comparison
+            history: [],
+            historyIndex: -1,
+            scale: 1,
+            panning: false,
+            panStart: { x: 0, y: 0 },
+            offset: { x: 0, y: 0 },
+            isDrawing: false,
+            currentTool: 'manual', // 'manual' or 'magic'
+            
+            // New State for Real-time Magic Wand
+            activeMagicWand: null, // Stores {x, y, baseImageData}
+            debounceTimer: null,
+
+            // Brush Preview State
+            brushPreviewTimeout: null,
+
+            // Settings
+            settings: {
+                brushSize: 50,
+                brushFeather: 0.5, // 0 to 1
+                brushOpacity: 1,
+                magicTolerance: 20,
+                magicOpacity: 1,
+                magicSmoothness: 0
+            },
+
+            init() {
+                this.bindEvents();
+                this.initTooltips(); // Initialize the fancy global tooltips
+                this.updateUI();
+                this.toggleTools('manual');
+            },
+
+            bindEvents() {
+                // Input handling
+                document.getElementById('imageInput').addEventListener('change', (e) => this.handleImageUpload(e));
+                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
+                
+                // Tool toggling
+                document.getElementById('tool-manual').addEventListener('click', () => this.toggleTools('manual'));
+                document.getElementById('tool-magic').addEventListener('click', () => this.toggleTools('magic'));
+
+                // Sliders - Manual (With Brush Preview)
+                const brushSizeInput = document.getElementById('brush-size');
+                brushSizeInput.addEventListener('input', (e) => {
+                    this.settings.brushSize = parseInt(e.target.value);
+                    document.getElementById('val-size').innerText = e.target.value + 'px';
+                    this.showBrushPreview(this.settings.brushSize);
+                });
+                brushSizeInput.addEventListener('mouseup', () => this.hideBrushPreview(1000));
+                brushSizeInput.addEventListener('touchend', () => this.hideBrushPreview(1000));
+
+                this.bindSlider('brush-feather', 'val-feather', (v) => { this.settings.brushFeather = parseInt(v) / 100; }, '%');
+                this.bindSlider('brush-opacity', 'val-opacity', (v) => { this.settings.brushOpacity = parseInt(v) / 100; }, '%');
+
+                // Sliders - Magic (Updated for Real-time)
+                this.bindSlider('magic-tolerance', 'val-tolerance', (v) => { 
+                    this.settings.magicTolerance = parseInt(v); 
+                    this.triggerMagicUpdate();
+                }, '');
+                this.bindSlider('magic-opacity', 'val-magic-opacity', (v) => { 
+                    this.settings.magicOpacity = parseInt(v) / 100; 
+                    this.triggerMagicUpdate();
+                }, '%');
+                this.bindSlider('magic-smoothness', 'val-smoothness', (v) => {
+                    this.settings.magicSmoothness = parseInt(v);
+                    this.triggerMagicUpdate();
+                }, '');
+
+
+                // Canvas Interactions (Drawing & Panning)
+                this.viewport.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                
+                // Zoom
+                this.viewport.parentElement.addEventListener('wheel', (e) => this.handleWheel(e));
+                document.getElementById('zoomIn').addEventListener('click', () => this.zoom(0.1));
+                document.getElementById('zoomOut').addEventListener('click', () => this.zoom(-0.1));
+                document.getElementById('fitScreen').addEventListener('click', () => this.fitToScreen());
+
+                // History
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+                document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+
+                // Compare
+                const compareBtn = document.getElementById('compareBtn');
+                compareBtn.addEventListener('mousedown', () => this.startCompare());
+                compareBtn.addEventListener('mouseup', () => this.endCompare());
+                compareBtn.addEventListener('mouseleave', () => this.endCompare());
+            },
+
+            bindSlider(id, displayId, callback, suffix) {
+                const el = document.getElementById(id);
+                el.addEventListener('input', (e) => {
+                    document.getElementById(displayId).innerText = e.target.value + suffix;
+                    callback(e.target.value);
+                });
+            },
+
+            // --- Fancy Tooltip Logic ---
+            initTooltips() {
+                const tooltip = document.getElementById('global-tooltip');
+                let hideTimeout;
+
+                const show = (target) => {
+                    const text = target.getAttribute('data-tooltip');
+                    if (!text) return;
+
+                    if (hideTimeout) clearTimeout(hideTimeout);
+
+                    tooltip.textContent = text;
+                    tooltip.style.display = 'block'; // Ensure it's in DOM for measurement
+
+                    const rect = target.getBoundingClientRect();
+                    const tooltipRect = tooltip.getBoundingClientRect();
+
+                    // Center horizontally relative to target
+                    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                    // Position above target
+                    let top = rect.top - tooltipRect.height - 8;
+
+                    // Boundary checks
+                    // Left edge
+                    if (left < 8) left = 8;
+                    // Right edge
+                    if (left + tooltipRect.width > window.innerWidth - 8) {
+                        left = window.innerWidth - tooltipRect.width - 8;
+                    }
+                    // Top edge (flip to bottom if not enough space)
+                    if (top < 8) {
+                        top = rect.bottom + 8;
+                    }
+
+                    tooltip.style.left = `${left}px`;
+                    tooltip.style.top = `${top}px`;
+                    
+                    // Trigger reflow for transition
+                    requestAnimationFrame(() => {
+                        tooltip.classList.add('visible');
+                    });
+                };
+
+                const hide = () => {
+                    tooltip.classList.remove('visible');
+                    hideTimeout = setTimeout(() => {
+                        tooltip.style.display = 'none';
+                    }, 200); // Match CSS transition duration
+                };
+
+                document.addEventListener('mouseover', (e) => {
+                    const target = e.target.closest('[data-tooltip]');
+                    if (target) show(target);
+                });
+
+                document.addEventListener('mouseout', (e) => {
+                    // We need to check if we moved to a child element or outside
+                    // But simpler: if we leave a data-tooltip element, start hiding
+                    // If we enter another one immediately, 'mouseover' will cancel the hide
+                    const target = e.target.closest('[data-tooltip]');
+                    if (target) hide();
+                });
+                
+                // Capture scrolling on window to hide tooltips (avoids floating ghosts)
+                window.addEventListener('scroll', hide, true);
+            },
+
+            // --- Brush Preview Logic ---
+            showBrushPreview(size) {
+                const overlay = document.getElementById('brush-preview-overlay');
+                const cursor = document.getElementById('brush-cursor-preview');
+                
+                if (this.brushPreviewTimeout) clearTimeout(this.brushPreviewTimeout);
+                
+                overlay.classList.remove('hidden');
+                // Force reflow
+                void overlay.offsetWidth; 
+                overlay.style.opacity = '1';
+                
+                // Determine visual size based on zoom level
+                // Use a generic visual scaling, but relative to screen center
+                // 1px on canvas = 1px * scale on screen
+                // But user wants to see relative size on canvas. 
+                // We will display the size in CSS pixels.
+                
+                // NOTE: brushSize is in Canvas Pixels. To show it correctly on screen, we need to multiply by this.scale
+                const displaySize = size * this.scale;
+                
+                cursor.style.width = `${displaySize}px`;
+                cursor.style.height = `${displaySize}px`;
+            },
+
+            hideBrushPreview(delay = 0) {
+                if (this.brushPreviewTimeout) clearTimeout(this.brushPreviewTimeout);
+                
+                this.brushPreviewTimeout = setTimeout(() => {
+                    const overlay = document.getElementById('brush-preview-overlay');
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                    }, 300); // Wait for fade transition
+                }, delay);
+            },
+
+            toggleTools(tool) {
+                this.currentTool = tool;
+                // Clear active magic wand session if switching tools
+                if (tool !== 'magic') {
+                    this.activeMagicWand = null;
+                }
+                
+                // UI Toggle
+                document.querySelectorAll('.tool-btn').forEach(b => {
+                    b.classList.remove('bg-sky-900/50', 'border-sky-500', 'text-sky-300');
+                    b.classList.add('bg-slate-700', 'border-transparent', 'text-slate-300');
+                });
+                const activeBtn = document.getElementById(`tool-${tool}`);
+                activeBtn.classList.remove('bg-slate-700', 'border-transparent', 'text-slate-300');
+                activeBtn.classList.add('bg-sky-900/50', 'border-sky-500', 'text-sky-300');
+
+                // Panel Toggle
+                document.getElementById('options-manual').classList.add('hidden');
+                document.getElementById('options-magic').classList.add('hidden');
+                document.getElementById(`options-${tool}`).classList.remove('hidden');
+            },
+
+            handleImageUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.img = new Image();
+                    this.img.onload = () => {
+                        this.setupCanvas();
+                    };
+                    this.img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            setupCanvas() {
+                // Set dimensions
+                this.canvas.width = this.img.width;
+                this.canvas.height = this.img.height;
+                
+                // Draw initial image
+                this.ctx.drawImage(this.img, 0, 0);
+                
+                // Save original for compare
+                this.originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+
+                // Initialize History
+                this.history = [];
+                this.historyIndex = -1;
+                this.saveState();
+
+                // UI setup
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('downloadBtn').disabled = false;
+                this.fitToScreen();
+            },
+
+            fitToScreen() {
+                if (!this.img) return;
+                const container = this.viewport.parentElement;
+                const padding = 40;
+                
+                const availableW = container.clientWidth - padding;
+                const availableH = container.clientHeight - padding;
+                
+                const scaleW = availableW / this.img.width;
+                const scaleH = availableH / this.img.height;
+                
+                this.scale = Math.min(scaleW, scaleH, 1); // Don't zoom in past 100% initially
+                this.offset = { x: 0, y: 0 }; // Center it ideally, simplified to 0,0 for now with CSS centering
+                
+                this.updateTransform();
+            },
+
+            updateTransform() {
+                this.viewport.style.width = `${this.canvas.width}px`;
+                this.viewport.style.height = `${this.canvas.height}px`;
+                this.viewport.style.transform = `scale(${this.scale}) translate(${this.offset.x}px, ${this.offset.y}px)`;
+                document.getElementById('zoomLevel').innerText = Math.round(this.scale * 100) + '%';
+            },
+
+            handleWheel(e) {
+                if (!this.img) return;
+                e.preventDefault();
+                
+                const zoomIntensity = 0.1;
+                const delta = e.deltaY < 0 ? 1 : -1;
+                const newScale = Math.max(0.1, Math.min(5, this.scale + (delta * zoomIntensity)));
+                
+                this.scale = newScale;
+                this.updateTransform();
+            },
+
+            zoom(delta) {
+                if (!this.img) return;
+                this.scale = Math.max(0.1, Math.min(5, this.scale + delta));
+                this.updateTransform();
+            },
+
+            // Coordinate conversion: Screen -> Canvas
+            getCanvasCoordinates(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX - rect.left) / this.scale,
+                    y: (e.clientY - rect.top) / this.scale
+                };
+            },
+
+            handleMouseDown(e) {
+                if (!this.img) return;
+
+                // Spacebar or Middle Click for Pan
+                if (e.button === 1 || (e.button === 0 && e.getModifierState('Space'))) { 
+                    this.panning = true;
+                    this.panStart = { x: e.clientX, y: e.clientY };
+                    this.viewport.parentElement.classList.add('panning');
+                    return;
+                }
+
+                if (e.button !== 0) return; // Only left click for tools
+
+                const pos = this.getCanvasCoordinates(e);
+
+                if (this.currentTool === 'manual') {
+                    // Reset magic wand session when using brush
+                    this.activeMagicWand = null;
+                    this.isDrawing = true;
+                    this.drawBrush(pos.x, pos.y);
+                } else if (this.currentTool === 'magic') {
+                    // Magic wand is a single click action
+                    this.performMagicWand(Math.floor(pos.x), Math.floor(pos.y));
+                }
+            },
+
+            handleMouseMove(e) {
+                if (this.panning) {
+                    const dx = (e.clientX - this.panStart.x) / this.scale;
+                    const dy = (e.clientY - this.panStart.y) / this.scale;
+                    this.offset.x += dx;
+                    this.offset.y += dy;
+                    this.panStart = { x: e.clientX, y: e.clientY };
+                    this.updateTransform();
+                    return;
+                }
+
+                if (!this.isDrawing) return;
+
+                const pos = this.getCanvasCoordinates(e);
+                this.drawBrush(pos.x, pos.y);
+            },
+
+            handleMouseUp(e) {
+                if (this.panning) {
+                    this.panning = false;
+                    this.viewport.parentElement.classList.remove('panning');
+                    return;
+                }
+
+                if (this.isDrawing) {
+                    this.isDrawing = false;
+                    this.saveState(); // Save state after stroke
+                }
+            },
+
+            drawBrush(x, y) {
+                const { brushSize, brushFeather, brushOpacity } = this.settings;
+                
+                this.ctx.save();
+                this.ctx.globalCompositeOperation = 'destination-out';
+                
+                // Create gradient for feathering
+                // 0 to 1-feather is solid, then fades to edge
+                const radius = brushSize / 2;
+                const grad = this.ctx.createRadialGradient(x, y, radius * (1 - brushFeather), x, y, radius);
+                
+                // Destination-out uses Alpha to determine how much to erase.
+                // 1.0 Alpha = Fully erased.
+                grad.addColorStop(0, `rgba(0, 0, 0, ${brushOpacity})`); 
+                if (brushFeather > 0) {
+                   grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                } else {
+                   grad.addColorStop(1, `rgba(0, 0, 0, ${brushOpacity})`);
+                }
+
+                this.ctx.fillStyle = grad;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            },
+
+            // Trigger update when slider moves
+            triggerMagicUpdate() {
+                if (!this.activeMagicWand) return;
+
+                // Debounce to prevent UI freezing on high-res images
+                if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                
+                this.debounceTimer = setTimeout(() => {
+                    this.updateMagicWand();
+                }, 50); // 50ms delay
+            },
+
+            // Re-apply magic wand on the stored base image
+            async updateMagicWand() {
+                if (!this.activeMagicWand) return;
+                
+                const { x, y, baseImageData } = this.activeMagicWand;
+                
+                // Run algorithm on the clean base data
+                await this.applyMagicWandAlgo(x, y, baseImageData);
+                
+                // Update history without pushing new state (replace top)
+                this.replaceState();
+            },
+
+            // Initial Magic Wand Click
+            async performMagicWand(startX, startY) {
+                // Show loader for UX on large images
+                document.getElementById('loader').classList.remove('hidden');
+
+                // Yield to main thread
+                await new Promise(r => setTimeout(r, 10));
+
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Capture the state BEFORE this operation
+                const baseImageData = this.ctx.getImageData(0, 0, width, height);
+
+                // Store session for real-time updates
+                this.activeMagicWand = {
+                    x: startX,
+                    y: startY,
+                    baseImageData: baseImageData
+                };
+
+                // Run algorithm
+                await this.applyMagicWandAlgo(startX, startY, baseImageData);
+
+                // Save new history state
+                this.saveState();
+                
+                document.getElementById('loader').classList.add('hidden');
+            },
+
+            // The Core Algorithm (extracted for reuse)
+            async applyMagicWandAlgo(startX, startY, baseImageData) {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Create a copy so we don't mutate the baseImageData reference
+                const newImageData = new ImageData(
+                    new Uint8ClampedArray(baseImageData.data),
+                    width,
+                    height
+                );
+                const data = newImageData.data;
+
+                // Helper to get index
+                const getIndex = (x, y) => (y * width + x) * 4;
+
+                const startIndex = getIndex(startX, startY);
+                const targetR = data[startIndex];
+                const targetG = data[startIndex + 1];
+                const targetB = data[startIndex + 2];
+                const targetA = data[startIndex + 3];
+
+                if (targetA === 0) return; // Already transparent
+
+                // --- 1. Identify Pixels to Remove (Flood Fill) ---
+                // We create a separate MASK array. 1 = Remove, 0 = Keep.
+                const mask = new Uint8Array(width * height);
+                const queue = [startIndex];
+                mask[startIndex / 4] = 1; 
+
+                // Visited check is implicitly handled by checking if mask is 0
+                // but BFS usually needs a 'visited' set if we don't mark immediately.
+                // We will use the mask array as 'visited' + 'selected'.
+
+                const tolerance = this.settings.magicTolerance;
+                const maxDist = Math.sqrt(255*255 * 3);
+                const allowedDist = (tolerance / 100) * maxDist;
+                
+                // Using a flat array for queue is faster than array.shift() in huge images, 
+                // but for simplicity/readability we stick to array. 
+                // Optimization: Use a pointers for queue to avoid re-indexing.
+                let qIndex = 0;
+                while (qIndex < queue.length) {
+                    const idx = queue[qIndex++];
+                    
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    
+                    // Note: We check neighbors of pixels that matched.
+                    
+                    const pxIndex = idx / 4;
+                    const x = pxIndex % width;
+                    const y = Math.floor(pxIndex / width);
+
+                    const neighbors = [
+                        { nx: x + 1, ny: y },
+                        { nx: x - 1, ny: y },
+                        { nx: x, ny: y + 1 },
+                        { nx: x, ny: y - 1 }
+                    ];
+
+                    for (let n of neighbors) {
+                        if (n.nx >= 0 && n.nx < width && n.ny >= 0 && n.ny < height) {
+                            const nIdx = getIndex(n.nx, n.ny);
+                            const nMaskIdx = nIdx / 4;
+                            
+                            if (mask[nMaskIdx] === 0) {
+                                // Check color match
+                                const nr = data[nIdx];
+                                const ng = data[nIdx+1];
+                                const nb = data[nIdx+2];
+                                const nDist = Math.sqrt(Math.pow(nr - targetR, 2) + Math.pow(ng - targetG, 2) + Math.pow(nb - targetB, 2));
+                                
+                                if (nDist <= allowedDist) {
+                                    mask[nMaskIdx] = 1;
+                                    queue.push(nIdx);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- 2. Smoothing (Blur the Mask) ---
+                const smoothness = this.settings.magicSmoothness;
+                let finalMask = mask;
+
+                if (smoothness > 0) {
+                    // Simple Box Blur on the Mask
+                    // Mask is 0 or 1.
+                    // We need to blur the binary mask to get values between 0 and 1 (effectively anti-aliasing the edge)
+                    // Then threshold it to snap it to a curve.
+                    
+                    // Create a float32 array for blurring to hold intermediate values
+                    const blurredMask = new Float32Array(width * height);
+                    const r = Math.floor(smoothness / 2) + 1; // Radius
+                    
+                    // Horizontal Pass (Simplified Box Blur for performance)
+                    // We only iterate over the bounding box of the selection ideally, 
+                    // but full pass is safer for connected components.
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            let sum = 0;
+                            let count = 0;
+                            for (let k = -r; k <= r; k++) {
+                                const nx = x + k;
+                                if (nx >= 0 && nx < width) {
+                                    sum += mask[y * width + nx];
+                                    count++;
+                                }
+                            }
+                            blurredMask[y * width + x] = sum / count;
+                        }
+                    }
+                    
+                    // Vertical Pass + Threshold in one go
+                    // Re-use mask array for output
+                    // Threshold: 0.5 (Standard)
+                    for (let x = 0; x < width; x++) {
+                        for (let y = 0; y < height; y++) {
+                            let sum = 0;
+                            let count = 0;
+                            for (let k = -r; k <= r; k++) {
+                                const ny = y + k;
+                                if (ny >= 0 && ny < height) {
+                                    sum += blurredMask[ny * width + x];
+                                    count++;
+                                }
+                            }
+                            const val = sum / count;
+                            // Threshold: If > 0.5, it's a 1.
+                            // This effectively "rounds" corners.
+                            finalMask[y * width + x] = val > 0.5 ? 1 : 0;
+                        }
+                    }
+                }
+
+                // --- 3. Apply Mask to Image ---
+                const removalAlphaFactor = 1 - this.settings.magicOpacity;
+
+                for (let i = 0; i < width * height; i++) {
+                    if (finalMask[i] === 1) {
+                        const idx = i * 4;
+                        data[idx + 3] = data[idx + 3] * removalAlphaFactor;
+                    }
+                }
+
+                this.ctx.putImageData(newImageData, 0, 0);
+            },
+
+            // History Management
+            saveState() {
+                // If we were in the middle of the stack, truncate future
+                if (this.historyIndex < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                }
+                
+                // Limit history size to prevent memory crash
+                if (this.history.length > 20) {
+                    this.history.shift();
+                    this.historyIndex--;
+                }
+
+                const data = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                this.history.push(data);
+                this.historyIndex++;
+                this.updateUI();
+            },
+
+            // Update the TOP of the history stack without pushing new
+            replaceState() {
+                if (this.historyIndex >= 0) {
+                    const data = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                    this.history[this.historyIndex] = data;
+                }
+            },
+
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.ctx.putImageData(this.history[this.historyIndex], 0, 0);
+                    this.updateUI();
+                }
+            },
+
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.ctx.putImageData(this.history[this.historyIndex], 0, 0);
+                    this.updateUI();
+                }
+            },
+
+            reset() {
+                if (!this.img) return;
+                this.ctx.putImageData(this.originalImageData, 0, 0);
+                this.saveState();
+            },
+
+            startCompare() {
+                if (!this.img) return;
+                // Temporarily draw original
+                const current = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                // We keep current in memory, draw original
+                this.ctx.putImageData(this.originalImageData, 0, 0);
+                // Store temp to revert
+                this.tempCompareData = current;
+            },
+
+            endCompare() {
+                if (!this.img || !this.tempCompareData) return;
+                this.ctx.putImageData(this.tempCompareData, 0, 0);
+                this.tempCompareData = null;
+            },
+
+            updateUI() {
+                document.getElementById('undoBtn').disabled = this.historyIndex <= 0;
+                document.getElementById('redoBtn').disabled = this.historyIndex >= this.history.length - 1;
+            },
+
+            downloadImage() {
+                if (!this.img) return;
+                const link = document.createElement('a');
+                link.download = 'background-removed.png';
+                link.href = this.canvas.toDataURL('image/png');
+                link.click();
+            }
+        };
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            // Prevent spacebar scrolling
+            window.addEventListener('keydown', (e) => {
+                if(e.code === 'Space' && e.target == document.body) e.preventDefault();
+            });
+            App.init();
+        });
+
+    </script> -->
+</body>
+</html>
