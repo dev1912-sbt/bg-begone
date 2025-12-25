@@ -667,7 +667,8 @@ const App = {
         const height = sh;
 
         const target = this.settings.refineTargetColor;
-        const tolerance = this.settings.refineTolerance * 4; 
+        const tolerance = this.settings.refineTolerance * 5; // Increased range
+        const forceRemovalThreshold = tolerance * 0.6; // Aggressive removal for close matches
         const radiusSquared = r * r;
 
         let modified = false;
@@ -683,34 +684,7 @@ const App = {
 
                 const idx = (py * width + px) * 4;
                 
-                // 2. Edge Detection
-                const alpha = data[idx + 3];
-                let isEdge = alpha < 255;
-
-                if (!isEdge) {
-                    const neighbors = [
-                        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
-                        { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
-                        { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
-                        { dx: -1, dy: 1 }, { dx: 1, dy: 1 }
-                    ];
-
-                    for (let n of neighbors) {
-                        const nx = px + n.dx;
-                        const ny = py + n.dy;
-                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                            const nIdx = (ny * width + nx) * 4;
-                            if (data[nIdx + 3] < 255) {
-                                isEdge = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (!isEdge) continue; 
-
-                // 3. Color Distance
+                // Calculate Color Distance FIRST
                 const pr = data[idx];
                 const pg = data[idx + 1];
                 const pb = data[idx + 2];
@@ -721,10 +695,51 @@ const App = {
                     (pb - target.b) ** 2
                 );
 
-                // 4. Alpha Ramp
-                if (dist < tolerance) {
-                    const factor = (dist / tolerance) ** 2;
-                    data[idx + 3] = Math.floor(alpha * factor);
+                // If it's way outside tolerance, skip immediately (protects distinct subject)
+                if (dist >= tolerance) continue;
+
+                // 2. Smart Edge Detection
+                // If the color is a VERY close match (background gap), we treat it as an edge even if it's solid.
+                // Otherwise, we require it to be a true edge (next to transparency) to protect the subject core.
+                
+                const alpha = data[idx + 3];
+                let shouldProcess = false;
+
+                if (dist < forceRemovalThreshold) {
+                    shouldProcess = true; // Force remove background islands
+                } else {
+                    // Standard Edge Check for "Fuzzy" zone
+                    if (alpha < 255) {
+                        shouldProcess = true;
+                    } else {
+                        // Check neighbors
+                        const neighbors = [
+                            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+                            { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
+                        ];
+                        for (let n of neighbors) {
+                            const nx = px + n.dx;
+                            const ny = py + n.dy;
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                const nIdx = (ny * width + nx) * 4;
+                                if (data[nIdx + 3] < 255) {
+                                    shouldProcess = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!shouldProcess) continue;
+
+                // 3. Alpha Ramp (Smoother curve)
+                // Use a gentler falloff (power 1.5 or linear) to preserve hair details better than power 2
+                const factor = Math.pow(dist / tolerance, 1.5); 
+                const newAlpha = Math.floor(alpha * factor);
+                
+                if (data[idx + 3] !== newAlpha) {
+                    data[idx + 3] = newAlpha;
                     modified = true;
                 }
             }
