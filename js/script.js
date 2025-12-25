@@ -28,7 +28,10 @@ const App = {
         brushOpacity: 1,
         magicTolerance: 20,
         magicOpacity: 1,
-        magicSmoothness: 0
+        magicSmoothness: 0,
+        refineSize: 50,
+        refineTolerance: 10,
+        refineTargetColor: null
     },
 
     init() {
@@ -134,6 +137,7 @@ const App = {
 
         document.getElementById('tool-manual').addEventListener('click', () => this.toggleTools('manual'));
         document.getElementById('tool-magic').addEventListener('click', () => this.toggleTools('magic'));
+        document.getElementById('tool-refine').addEventListener('click', () => this.toggleTools('refine'));
 
         // Setting Triggers (Popup Logic)
         document.querySelectorAll('.setting-trigger').forEach(btn => {
@@ -215,6 +219,20 @@ const App = {
         this.bindSlider('magic-smoothness', 'val-smoothness', (v) => {
             this.settings.magicSmoothness = parseInt(v);
             this.triggerMagicUpdate();
+        }, '');
+
+        // Refine Tool Sliders
+        const refineSizeInput = document.getElementById('refine-size');
+        refineSizeInput.addEventListener('input', (e) => {
+            this.settings.refineSize = parseInt(e.target.value);
+            document.getElementById('val-refine-size').innerText = e.target.value + 'px';
+            this.showBrushPreview(this.settings.refineSize);
+        });
+        refineSizeInput.addEventListener('mouseup', () => this.hideBrushPreview(1000));
+        refineSizeInput.addEventListener('touchend', () => this.hideBrushPreview(1000));
+
+        this.bindSlider('refine-tolerance', 'val-refine-tolerance', (v) => { 
+            this.settings.refineTolerance = parseInt(v); 
         }, '');
 
         this.viewport.addEventListener('mousedown', (e) => this.handleMouseDown(e));
@@ -421,6 +439,7 @@ const App = {
 
         document.getElementById('options-manual').classList.add('hidden');
         document.getElementById('options-magic').classList.add('hidden');
+        document.getElementById('options-refine').classList.add('hidden');
         document.getElementById(`options-${tool}`).classList.remove('hidden');
         
         // Hide popup when switching tools
@@ -557,6 +576,10 @@ const App = {
             this.activeMagicWand = null;
             this.isDrawing = true;
             this.drawBrush(pos.x, pos.y);
+        } else if (this.currentTool === 'refine') {
+            this.activeMagicWand = null;
+            this.isDrawing = true;
+            this.refineEdge(pos.x, pos.y);
         } else if (this.currentTool === 'magic') {
             this.performMagicWand(Math.floor(pos.x), Math.floor(pos.y));
         }
@@ -576,7 +599,12 @@ const App = {
         if (!this.isDrawing) return;
 
         const pos = this.getCanvasCoordinates(e);
-        this.drawBrush(pos.x, pos.y);
+        
+        if (this.currentTool === 'manual') {
+            this.drawBrush(pos.x, pos.y);
+        } else if (this.currentTool === 'refine') {
+            this.refineEdge(pos.x, pos.y);
+        }
     },
 
     handleMouseUp(e) {
@@ -613,6 +641,98 @@ const App = {
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.restore();
+    },
+
+    refineEdge(x, y) {
+        if (!this.settings.refineTargetColor) return;
+
+        const r = this.settings.refineSize / 2;
+        const startX = Math.floor(x - r);
+        const startY = Math.floor(y - r);
+        const size = Math.floor(r * 2);
+
+        // Boundary checks
+        if (startX + size < 0 || startY + size < 0 || startX >= this.canvas.width || startY >= this.canvas.height) return;
+
+        let sx = Math.max(0, startX);
+        let sy = Math.max(0, startY);
+        let sw = Math.min(this.canvas.width - sx, size);
+        let sh = Math.min(this.canvas.height - sy, size);
+        
+        if (sw <= 0 || sh <= 0) return;
+
+        const imageData = this.ctx.getImageData(sx, sy, sw, sh);
+        const data = imageData.data;
+        const width = sw;
+        const height = sh;
+
+        const target = this.settings.refineTargetColor;
+        const tolerance = this.settings.refineTolerance * 4; 
+        const radiusSquared = r * r;
+
+        let modified = false;
+
+        for (let py = 0; py < height; py++) {
+            for (let px = 0; px < width; px++) {
+                const gx = sx + px;
+                const gy = sy + py;
+
+                // 1. Circle Check
+                const distSq = (gx - x) ** 2 + (gy - y) ** 2;
+                if (distSq > radiusSquared) continue;
+
+                const idx = (py * width + px) * 4;
+                
+                // 2. Edge Detection
+                const alpha = data[idx + 3];
+                let isEdge = alpha < 255;
+
+                if (!isEdge) {
+                    const neighbors = [
+                        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+                        { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+                        { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
+                        { dx: -1, dy: 1 }, { dx: 1, dy: 1 }
+                    ];
+
+                    for (let n of neighbors) {
+                        const nx = px + n.dx;
+                        const ny = py + n.dy;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            const nIdx = (ny * width + nx) * 4;
+                            if (data[nIdx + 3] < 255) {
+                                isEdge = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!isEdge) continue; 
+
+                // 3. Color Distance
+                const pr = data[idx];
+                const pg = data[idx + 1];
+                const pb = data[idx + 2];
+
+                const dist = Math.sqrt(
+                    (pr - target.r) ** 2 + 
+                    (pg - target.g) ** 2 + 
+                    (pb - target.b) ** 2
+                );
+
+                // 4. Alpha Ramp
+                if (dist < tolerance) {
+                    const factor = (dist / tolerance) ** 2;
+                    data[idx + 3] = Math.floor(alpha * factor);
+                    modified = true;
+                }
+            }
+        }
+
+        if (modified) {
+            this.ctx.putImageData(imageData, sx, sy);
+        }
     },
 
     triggerMagicUpdate() {
@@ -682,6 +802,9 @@ const App = {
         const targetG = data[startIndex + 1];
         const targetB = data[startIndex + 2];
         const targetA = data[startIndex + 3];
+
+        // Automatically set Refine Brush target color
+        this.settings.refineTargetColor = { r: targetR, g: targetG, b: targetB };
 
         if (targetA === 0) return;
 
