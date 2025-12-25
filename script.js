@@ -576,7 +576,7 @@ const App = {
         // Auto-open tolerance slider if not already open
         const toleranceBtn = document.querySelector('.setting-trigger[data-target="setting-magic-tolerance"]');
         if (toleranceBtn && !toleranceBtn.classList.contains('active-setting')) {
-            toleranceBtn.click();
+            setTimeout(() => toleranceBtn.click(), 50);
         }
     },
 
