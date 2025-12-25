@@ -134,6 +134,63 @@ const App = {
         document.getElementById('tool-manual').addEventListener('click', () => this.toggleTools('manual'));
         document.getElementById('tool-magic').addEventListener('click', () => this.toggleTools('magic'));
 
+        // Setting Triggers (Popup Logic)
+        document.querySelectorAll('.setting-trigger').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = btn.getAttribute('data-target');
+                const popup = document.getElementById('slider-popup');
+                const allGroups = document.querySelectorAll('.slider-group');
+                const targetGroup = document.getElementById(targetId);
+                
+                // Toggle if clicking the same button
+                if (btn.classList.contains('active-setting')) {
+                    popup.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+                    popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+                    
+                    btn.classList.remove('active-setting');
+                    btn.classList.remove('text-theme');
+                    btn.classList.add('text-slate-400');
+                    return;
+                }
+
+                // Reset all buttons
+                document.querySelectorAll('.setting-trigger').forEach(b => {
+                    b.classList.remove('active-setting');
+                    b.classList.remove('text-theme');
+                    b.classList.add('text-slate-400');
+                });
+
+                // Activate current
+                btn.classList.add('active-setting');
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('text-theme');
+
+                // Show popup and correct group
+                allGroups.forEach(g => g.classList.add('hidden'));
+                targetGroup.classList.remove('hidden');
+                
+                popup.classList.remove('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+                popup.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+            });
+        });
+
+        // Close popup when clicking outside
+        window.addEventListener('click', (e) => {
+            const popup = document.getElementById('slider-popup');
+            const island = document.getElementById('control-island');
+            if (!popup.contains(e.target) && !island.contains(e.target)) {
+                popup.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+                popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+                
+                document.querySelectorAll('.setting-trigger').forEach(b => {
+                    b.classList.remove('active-setting');
+                    b.classList.remove('text-theme');
+                    b.classList.add('text-slate-400');
+                });
+            }
+        });
+
         const brushSizeInput = document.getElementById('brush-size');
         brushSizeInput.addEventListener('input', (e) => {
             this.settings.brushSize = parseInt(e.target.value);
@@ -276,14 +333,26 @@ const App = {
         }
         
         document.querySelectorAll('.tool-btn').forEach(b => {
-            b.classList.remove('active');
+            b.classList.remove('bg-slate-700', 'text-white');
+            b.classList.add('text-slate-400');
         });
         const activeBtn = document.getElementById(`tool-${tool}`);
-        activeBtn.classList.add('active');
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('bg-slate-700', 'text-white');
 
         document.getElementById('options-manual').classList.add('hidden');
         document.getElementById('options-magic').classList.add('hidden');
         document.getElementById(`options-${tool}`).classList.remove('hidden');
+        
+        // Hide popup when switching tools
+        const popup = document.getElementById('slider-popup');
+        popup.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+        popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+        
+        document.querySelectorAll('.setting-trigger').forEach(b => {
+            b.classList.remove('active-setting', 'text-theme');
+            b.classList.add('text-slate-400');
+        });
     },
 
     handleImageUpload(e) {
@@ -503,6 +572,12 @@ const App = {
         this.saveState();
         
         document.getElementById('loader').classList.add('hidden');
+
+        // Auto-open tolerance slider if not already open
+        const toleranceBtn = document.querySelector('.setting-trigger[data-target="setting-magic-tolerance"]');
+        if (toleranceBtn && !toleranceBtn.classList.contains('active-setting')) {
+            toleranceBtn.click();
+        }
     },
 
     async applyMagicWandAlgo(startX, startY, baseImageData) {
@@ -681,6 +756,13 @@ resetCanvas() {
         this.scale = 1;
         this.offset = { x: 0, y: 0 };
         this.updateTransform();
+    },
+
+    startCompare() {
+        if (!this.img) return;
+        const current = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.putImageData(this.originalImageData, 0, 0);
+        this.tempCompareData = current;
     },
 
     endCompare() {

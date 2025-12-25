@@ -59,117 +59,10 @@
     </div>
 
     <!-- Main Workspace -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden relative bg-slate-900">
         
-        <!-- Left Sidebar: Tools -->
-        <aside class="w-72 bg-slate-800 border-r border-slate-700 flex flex-col shrink-0 z-10 overflow-y-auto">
-            
-            <!-- Tool Selection -->
-            <div class="p-4 border-b border-slate-700">
-                <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">Modes</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="tool-manual" class="tool-btn active bg-slate-700 border border-transparent text-slate-300 p-3 rounded flex flex-col items-center gap-2 transition-all" data-tooltip="Erase background manually with a brush">
-                        <i class="fas fa-eraser text-xl"></i>
-                        <span class="text-xs">Manual Brush</span>
-                    </button>
-                    <button id="tool-magic" class="tool-btn bg-slate-700 border border-transparent hover:bg-slate-600 text-slate-300 p-3 rounded flex flex-col items-center gap-2 transition-all" data-tooltip="Auto-remove connected colors">
-                        <i class="fas fa-wand-magic-sparkles text-xl"></i>
-                        <span class="text-xs">Magic Wand</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Contextual Options: Brush -->
-            <div id="options-manual" class="p-4 border-b border-slate-700 space-y-4">
-                <h3 class="text-xs font-bold text-slate-400 uppercase">Brush Settings</h3>
-                
-                <div class="space-y-1" data-tooltip="Adjust brush diameter">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Size</span>
-                        <span id="val-size">50px</span>
-                    </div>
-                    <input type="range" id="brush-size" min="1" max="200" value="50">
-                </div>
-
-                <div class="space-y-1" data-tooltip="Softness of the brush edges">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Feather (Softness)</span>
-                        <span id="val-feather">50%</span>
-                    </div>
-                    <input type="range" id="brush-feather" min="0" max="100" value="50">
-                </div>
-
-                <div class="space-y-1" data-tooltip="Strength of the eraser">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Opacity</span>
-                        <span id="val-opacity">100%</span>
-                    </div>
-                    <input type="range" id="brush-opacity" min="1" max="100" value="100">
-                </div>
-            </div>
-
-            <!-- Contextual Options: Magic Wand -->
-            <div id="options-magic" class="p-4 border-b border-slate-700 space-y-4 hidden">
-                <h3 class="text-xs font-bold text-slate-400 uppercase">Magic Wand Settings</h3>
-                <p class="text-xs text-slate-500 italic">Click on the image to auto-remove similar adjacent colors.</p>
-
-                <div class="space-y-1" data-tooltip="How strictly colors must match">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Fuzziness (Tolerance)</span>
-                        <span id="val-tolerance">20</span>
-                    </div>
-                    <input type="range" id="magic-tolerance" min="0" max="100" value="20">
-                    <div class="flex justify-between text-[10px] text-slate-500">
-                        <span>Strict</span>
-                        <span>Loose</span>
-                    </div>
-                </div>
-                
-                <div class="space-y-1" data-tooltip="Smooths jagged edges (Choke)">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Smoothness</span>
-                        <span id="val-smoothness">0</span>
-                    </div>
-                    <input type="range" id="magic-smoothness" min="0" max="20" value="0">
-                    <div class="flex justify-between text-[10px] text-slate-500">
-                        <span>Sharp</span>
-                        <span>Round</span>
-                    </div>
-                </div>
-
-                <div class="space-y-1" data-tooltip="Transparency of removed area">
-                    <div class="flex justify-between text-xs text-slate-300">
-                        <span>Removal Opacity</span>
-                        <span id="val-magic-opacity">100%</span>
-                    </div>
-                    <input type="range" id="magic-opacity" min="1" max="100" value="100">
-                </div>
-            </div>
-
-            <!-- History Actions -->
-            <div class="p-4 mt-auto">
-                <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">History</h3>
-                <div class="flex gap-2 mb-4">
-                    <button id="undoBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded text-sm disabled:opacity-30 disabled:cursor-not-allowed" data-tooltip="Ctrl+Z">
-                        <i class="fas fa-undo mr-1"></i> Undo
-                    </button>
-                    <button id="redoBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded text-sm disabled:opacity-30 disabled:cursor-not-allowed" data-tooltip="Ctrl+Y">
-                        <i class="fas fa-redo mr-1"></i> Redo
-                    </button>
-                </div>
-                
-                <button id="compareBtn" class="w-full btn-action py-2 rounded text-sm transition-colors mb-2 select-none" data-tooltip="Hold to see original image">
-                    <i class="fas fa-eye mr-1"></i> Hold to Compare
-                </button>
-                
-                <button id="resetBtn" class="w-full border border-red-500/50 text-red-400 hover:bg-red-500/10 py-2 rounded text-sm transition-colors">
-                    Reset Image
-                </button>
-            </div>
-        </aside>
-
         <!-- Viewport -->
-        <main class="flex-1 relative bg-slate-900 overflow-hidden flex items-center justify-center">
+        <main class="w-full h-full relative overflow-hidden flex items-center justify-center">
             
             <!-- Canvas Container (Applied Transforms here) -->
             <div id="viewport" class="relative shadow-2xl shadow-black hidden">
@@ -184,8 +77,8 @@
                 <div id="brush-cursor-preview"></div>
             </div>
 
-            <!-- Floating Controls -->
-            <div class="absolute bottom-6 right-6 flex items-center gap-2 bg-slate-800 p-2 rounded-lg shadow-lg border border-slate-700 z-30">
+            <!-- Floating Controls (Zoom) -->
+            <div class="absolute bottom-6 right-6 flex items-center gap-2 bg-slate-800/80 backdrop-blur p-2 rounded-lg shadow-lg border border-slate-700 z-30">
                 <button id="zoomOut" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom Out"><i class="fas fa-minus"></i></button>
                 <span id="zoomLevel" class="text-xs font-mono w-12 text-center">100%</span>
                 <button id="zoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom In"><i class="fas fa-plus"></i></button>
@@ -209,6 +102,124 @@
                 </div>
             </div>
         </main>
+
+        <!-- Control Island -->
+        <div id="control-island" class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl flex items-center p-2 gap-3 z-50 transition-all duration-300">
+            
+            <!-- Section 1: Modes -->
+            <div class="flex items-center gap-1 pr-3 border-r border-slate-600">
+                <button id="tool-manual" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Manual Brush">
+                    <i class="fas fa-eraser text-lg"></i>
+                </button>
+                <button id="tool-magic" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Magic Wand">
+                    <i class="fas fa-wand-magic-sparkles text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Section 2: Contextual Settings -->
+            <div id="options-manual" class="flex items-center gap-2 px-1">
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-size" data-tooltip="Brush Size">
+                    <i class="fas fa-circle text-sm"></i>
+                </button>
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-feather" data-tooltip="Softness">
+                    <i class="fas fa-feather-alt text-sm"></i>
+                </button>
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-opacity" data-tooltip="Opacity">
+                    <i class="fas fa-adjust text-sm"></i>
+                </button>
+            </div>
+
+            <div id="options-magic" class="hidden flex items-center gap-2 px-1">
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-tolerance" data-tooltip="Tolerance">
+                    <i class="fas fa-bullseye text-sm"></i>
+                </button>
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-smoothness" data-tooltip="Smoothness">
+                    <i class="fas fa-water text-sm"></i>
+                </button>
+                <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-opacity" data-tooltip="Removal Opacity">
+                    <i class="fas fa-ghost text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Section 3: Actions -->
+            <div class="flex items-center gap-1 pl-3 border-l border-slate-600">
+                <button id="undoBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30" data-tooltip="Undo">
+                    <i class="fas fa-undo text-sm"></i>
+                </button>
+                <button id="redoBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30" data-tooltip="Redo">
+                    <i class="fas fa-redo text-sm"></i>
+                </button>
+                <button id="compareBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Hold to Compare">
+                    <i class="fas fa-eye text-sm"></i>
+                </button>
+                <button id="resetBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all" data-tooltip="Reset Image">
+                    <i class="fas fa-history text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Slider Popup -->
+        <div id="slider-popup" class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-600 rounded-xl p-4 shadow-2xl w-64 z-40 flex-col gap-3 transition-all duration-300 opacity-0 translate-y-4 scale-95 pointer-events-none">
+            
+            <!-- Brush Size -->
+            <div id="setting-brush-size" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Brush Size</span>
+                    <span id="val-size">50px</span>
+                </div>
+                <input type="range" id="brush-size" min="1" max="200" value="50" class="w-full accent-theme">
+            </div>
+
+            <!-- Brush Feather -->
+            <div id="setting-brush-feather" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Feather</span>
+                    <span id="val-feather">50%</span>
+                </div>
+                <input type="range" id="brush-feather" min="0" max="100" value="50" class="w-full accent-theme">
+            </div>
+
+            <!-- Brush Opacity -->
+            <div id="setting-brush-opacity" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Opacity</span>
+                    <span id="val-opacity">100%</span>
+                </div>
+                <input type="range" id="brush-opacity" min="1" max="100" value="100" class="w-full accent-theme">
+            </div>
+
+            <!-- Magic Tolerance -->
+            <div id="setting-magic-tolerance" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Tolerance</span>
+                    <span id="val-tolerance">20</span>
+                </div>
+                <input type="range" id="magic-tolerance" min="0" max="100" value="20" class="w-full accent-theme">
+                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>Strict</span>
+                    <span>Loose</span>
+                </div>
+            </div>
+
+            <!-- Magic Smoothness -->
+            <div id="setting-magic-smoothness" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Smoothness</span>
+                    <span id="val-smoothness">0</span>
+                </div>
+                <input type="range" id="magic-smoothness" min="0" max="20" value="0" class="w-full accent-theme">
+            </div>
+
+            <!-- Magic Opacity -->
+            <div id="setting-magic-opacity" class="slider-group hidden">
+                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                    <span class="font-bold uppercase">Removal Opacity</span>
+                    <span id="val-magic-opacity">100%</span>
+                </div>
+                <input type="range" id="magic-opacity" min="1" max="100" value="100" class="w-full accent-theme">
+            </div>
+        </div>
+
     </div>
 
     <!-- The Single Global Tooltip Element -->
