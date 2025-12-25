@@ -488,15 +488,18 @@ const App = {
         if (!this.img) return;
         const container = this.viewport.parentElement;
         const padding = 40;
+        const bottomOffset = 120; // Space for Control Island
         
         const availableW = container.clientWidth - padding;
-        const availableH = container.clientHeight - padding;
+        const availableH = container.clientHeight - padding - bottomOffset;
         
         const scaleW = availableW / this.img.width;
         const scaleH = availableH / this.img.height;
         
         this.scale = Math.min(scaleW, scaleH, 1);
-        this.offset = { x: 0, y: 0 };
+        // Center vertically with offset consideration
+        // We want it centered in the available space, which is shifted up
+        this.offset = { x: 0, y: -bottomOffset / 2 }; 
         
         this.updateTransform();
     },
