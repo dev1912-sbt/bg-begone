@@ -481,6 +481,7 @@ const App = {
         this.canvas.classList.remove('hidden');
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('downloadBtn').disabled = false;
+        document.getElementById('control-island').classList.remove('hidden');
         this.fitToScreen();
     },
 
@@ -834,6 +835,7 @@ resetCanvas() {
         document.getElementById('downloadBtn').disabled = true;
         document.getElementById('imageInput').value = '';
         document.getElementById('errorMsg').classList.add('hidden');
+        document.getElementById('control-island').classList.add('hidden');
         
         this.scale = 1;
         this.offset = { x: 0, y: 0 };
