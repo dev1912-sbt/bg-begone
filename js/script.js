@@ -482,6 +482,7 @@ const App = {
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('downloadBtn').disabled = false;
         document.getElementById('control-island').classList.remove('hidden');
+        document.getElementById('zoom-controls').classList.remove('hidden');
         this.fitToScreen();
     },
 
@@ -836,6 +837,7 @@ resetCanvas() {
         document.getElementById('imageInput').value = '';
         document.getElementById('errorMsg').classList.add('hidden');
         document.getElementById('control-island').classList.add('hidden');
+        document.getElementById('zoom-controls').classList.add('hidden');
         
         this.scale = 1;
         this.offset = { x: 0, y: 0 };
