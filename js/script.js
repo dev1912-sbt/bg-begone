@@ -99,18 +99,26 @@ const App = {
         });
 
         document.getElementById('openImageBtn').addEventListener('click', () => {
+            const input = document.getElementById('imageInput');
+            
             if (this.img) {
                 if (confirm('Opening a new image will discard your current changes. Continue?')) {
-                    document.getElementById('imageInput').click();
+                    // input.value = ''; // Commented out to debug
+                    setTimeout(() => input.click(), 10);
                 }
             } else {
-                document.getElementById('imageInput').click();
+                // input.value = ''; // Commented out to debug
+                setTimeout(() => input.click(), 10);
             }
         });
         
         // Empty State Interactions
         const emptyState = document.getElementById('emptyState');
-        emptyState.addEventListener('click', () => document.getElementById('imageInput').click());
+        emptyState.addEventListener('click', () => {
+            const input = document.getElementById('imageInput');
+            // input.value = '';
+            setTimeout(() => input.click(), 10);
+        });
         
         // Drag and Drop
         const dropZone = document.body; // Allow dropping anywhere
@@ -205,6 +213,7 @@ const App = {
         });
         brushSizeInput.addEventListener('mouseup', () => this.hideBrushPreview(1000));
         brushSizeInput.addEventListener('touchend', () => this.hideBrushPreview(1000));
+        this.addSliderWheelSupport(brushSizeInput);
 
         this.bindSlider('brush-feather', 'val-feather', (v) => { this.settings.brushFeather = parseInt(v) / 100; }, '%');
         this.bindSlider('brush-opacity', 'val-opacity', (v) => { this.settings.brushOpacity = parseInt(v) / 100; }, '%');
@@ -231,6 +240,7 @@ const App = {
         });
         refineSizeInput.addEventListener('mouseup', () => this.hideBrushPreview(1000));
         refineSizeInput.addEventListener('touchend', () => this.hideBrushPreview(1000));
+        this.addSliderWheelSupport(refineSizeInput);
 
         this.bindSlider('refine-tolerance', 'val-refine-tolerance', (v) => { 
             this.settings.refineTolerance = parseInt(v); 
@@ -285,6 +295,19 @@ const App = {
     handleKeyDown(e) {
         // Ignore if typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Close Settings Popup on Escape
+        if (e.key === 'Escape') {
+            const popup = document.getElementById('slider-popup');
+            popup.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
+            popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
+            
+            document.querySelectorAll('.setting-trigger').forEach(b => {
+                b.classList.remove('active-setting', 'text-theme');
+                b.classList.add('text-slate-400');
+            });
+            return;
+        }
 
         // Spacebar Pan (Prevent Scroll)
         if (e.code === 'Space') {
@@ -366,6 +389,34 @@ const App = {
         el.addEventListener('input', (e) => {
             document.getElementById(displayId).innerText = e.target.value + suffix;
             callback(e.target.value);
+        });
+        this.addSliderWheelSupport(el);
+    },
+
+    addSliderWheelSupport(el) {
+        const container = el.closest('.slider-group') || el;
+        
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const step = el.step ? parseFloat(el.step) : 1;
+            // Scroll up (negative deltaY) -> Increase value
+            const delta = e.deltaY < 0 ? step : -step;
+            
+            // Accelerate if shift is held (optional, but nice)
+            const multiplier = e.shiftKey ? 10 : 1;
+            
+            let newValue = parseFloat(el.value) + (delta * multiplier);
+            
+            const min = parseFloat(el.min);
+            const max = parseFloat(el.max);
+            newValue = Math.max(min, Math.min(max, newValue));
+            
+            if (newValue !== parseFloat(el.value)) {
+                el.value = newValue;
+                el.dispatchEvent(new Event('input'));
+                // Ensure preview hides after scrolling stops
+                this.hideBrushPreview(1000);
+            }
         });
     },
 
