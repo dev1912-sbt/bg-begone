@@ -14,6 +14,7 @@ const App = {
     panStart: { x: 0, y: 0 },
     offset: { x: 0, y: 0 },
     isDrawing: false,
+    isSpacePressed: false,
     currentTool: 'manual',
     
     activeMagicWand: null,
@@ -220,6 +221,13 @@ const App = {
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                this.isSpacePressed = false;
+                this.canvas.classList.remove('panning');
+            }
+        });
+        
         this.viewport.parentElement.addEventListener('wheel', (e) => this.handleWheel(e));
         document.getElementById('zoomIn').addEventListener('click', () => this.zoom(0.1));
         document.getElementById('zoomOut').addEventListener('click', () => this.zoom(-0.1));
@@ -233,6 +241,77 @@ const App = {
         compareBtn.addEventListener('mousedown', () => this.startCompare());
         compareBtn.addEventListener('mouseup', () => this.endCompare());
         compareBtn.addEventListener('mouseleave', () => this.endCompare());
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+    },
+
+    handleKeyDown(e) {
+        // Ignore if typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Spacebar Pan (Prevent Scroll)
+        if (e.code === 'Space') {
+            e.preventDefault();
+            this.isSpacePressed = true;
+            this.canvas.classList.add('panning');
+        }
+
+        // Undo / Redo
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                this.redo();
+            } else {
+                this.undo();
+            }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            this.redo();
+        }
+
+        // Tools
+        if (e.key.toLowerCase() === 'b') {
+            this.toggleTools('manual');
+        }
+        if (e.key.toLowerCase() === 'w') {
+            this.toggleTools('magic');
+        }
+
+        // Settings Shortcuts
+        if (e.key.toLowerCase() === 'f') {
+            if (this.currentTool === 'magic') {
+                this.triggerSettingPopup('setting-magic-tolerance');
+            }
+        }
+        if (e.key.toLowerCase() === 's') {
+            if (this.currentTool === 'magic') {
+                this.triggerSettingPopup('setting-magic-smoothness');
+            }
+        }
+        if (e.key.toLowerCase() === 'o') {
+            if (this.currentTool === 'magic') {
+                this.triggerSettingPopup('setting-magic-opacity');
+            } else {
+                this.triggerSettingPopup('setting-brush-opacity');
+            }
+        }
+    },
+
+    triggerSettingPopup(targetId) {
+        // Find the button that targets this setting
+        const btn = document.querySelector(`.setting-trigger[data-target="${targetId}"]`);
+        if (btn) {
+            // If it's hidden (because tool is not active), don't trigger
+            if (btn.offsetParent === null) return;
+            
+            // Simulate click logic
+            // We can't just btn.click() because we want to ensure it opens, not toggles closed if already open?
+            // Actually, toggle is fine, but let's be consistent with the click handler.
+            // The click handler toggles.
+            btn.click();
+        }
     },
 
     bindSlider(id, displayId, callback, suffix) {
@@ -458,7 +537,7 @@ const App = {
     handleMouseDown(e) {
         if (!this.img) return;
 
-        if (e.button === 1 || (e.button === 0 && e.getModifierState('Space'))) { 
+        if (e.button === 1 || (e.button === 0 && this.isSpacePressed)) { 
             this.panning = true;
             this.panStart = { x: e.clientX, y: e.clientY };
             this.viewport.parentElement.classList.add('panning');
