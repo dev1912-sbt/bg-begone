@@ -162,16 +162,14 @@ const App = {
                     popup.classList.remove('opacity-100', 'translate-y-0', 'scale-100', 'pointer-events-auto');
                     popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
                     
-                    btn.classList.remove('active-setting');
-                    btn.classList.remove('text-theme');
+                    btn.classList.remove('active-setting', 'text-theme');
                     btn.classList.add('text-slate-400');
                     return;
                 }
 
                 // Reset all buttons
                 document.querySelectorAll('.setting-trigger').forEach(b => {
-                    b.classList.remove('active-setting');
-                    b.classList.remove('text-theme');
+                    b.classList.remove('active-setting', 'text-theme');
                     b.classList.add('text-slate-400');
                 });
 
@@ -190,7 +188,7 @@ const App = {
         });
 
         // Close popup when clicking outside
-        window.addEventListener('click', (e) => {
+        globalThis.addEventListener('click', (e) => {
             const popup = document.getElementById('slider-popup');
             const island = document.getElementById('control-island');
             if (!popup.contains(e.target) && !island.contains(e.target)) {
@@ -198,8 +196,7 @@ const App = {
                 popup.classList.add('opacity-0', 'translate-y-4', 'scale-95', 'pointer-events-none');
                 
                 document.querySelectorAll('.setting-trigger').forEach(b => {
-                    b.classList.remove('active-setting');
-                    b.classList.remove('text-theme');
+                    b.classList.remove('active-setting', 'text-theme');
                     b.classList.add('text-slate-400');
                 });
             }
@@ -247,8 +244,8 @@ const App = {
         }, '');
 
         this.viewport.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        globalThis.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        globalThis.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         
         // Prevent context menu on canvas for brush resizing
         this.canvas.addEventListener('contextmenu', (e) => {
@@ -267,7 +264,7 @@ const App = {
             if (e.target === helpModal) helpModal.classList.add('hidden');
         });
 
-        window.addEventListener('keyup', (e) => {
+        globalThis.addEventListener('keyup', (e) => {
             if (e.code === 'Space') {
                 this.isSpacePressed = false;
                 this.canvas.classList.remove('panning');
@@ -289,7 +286,7 @@ const App = {
         compareBtn.addEventListener('mouseleave', () => this.endCompare());
 
         // Keyboard Shortcuts
-        window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        globalThis.addEventListener('keydown', (e) => this.handleKeyDown(e));
     },
 
     handleKeyDown(e) {
@@ -398,20 +395,20 @@ const App = {
         
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const step = el.step ? parseFloat(el.step) : 1;
+            const step = el.step ? Number.parseFloat(el.step) : 1;
             // Scroll up (negative deltaY) -> Increase value
             const delta = e.deltaY < 0 ? step : -step;
             
             // Accelerate if shift is held (optional, but nice)
             const multiplier = e.shiftKey ? 10 : 1;
             
-            let newValue = parseFloat(el.value) + (delta * multiplier);
+            let newValue = Number.parseFloat(el.value) + (delta * multiplier);
             
-            const min = parseFloat(el.min);
-            const max = parseFloat(el.max);
+            const min = Number.parseFloat(el.min);
+            const max = Number.parseFloat(el.max);
             newValue = Math.max(min, Math.min(max, newValue));
             
-            if (newValue !== parseFloat(el.value)) {
+            if (newValue !== Number.parseFloat(el.value)) {
                 el.value = newValue;
                 el.dispatchEvent(new Event('input'));
                 // Ensure preview hides after scrolling stops
@@ -425,7 +422,7 @@ const App = {
         let hideTimeout;
 
         const show = (target) => {
-            const text = target.getAttribute('data-tooltip');
+            const text = target.dataset.tooltip;
             if (!text) return;
 
             if (hideTimeout) clearTimeout(hideTimeout);
@@ -482,7 +479,8 @@ const App = {
         if (this.brushPreviewTimeout) clearTimeout(this.brushPreviewTimeout);
         
         overlay.classList.remove('hidden');
-        void overlay.offsetWidth; 
+        // Trigger reflow
+        const _ = overlay.offsetWidth; 
         overlay.style.opacity = '1';
         
         const displaySize = size * this.scale;
@@ -844,10 +842,10 @@ const App = {
                 const pg = data[idx + 1];
                 const pb = data[idx + 2];
 
-                const dist = Math.sqrt(
-                    (pr - target.r) ** 2 + 
-                    (pg - target.g) ** 2 + 
-                    (pb - target.b) ** 2
+                const dist = Math.hypot(
+                    pr - target.r,
+                    pg - target.g,
+                    pb - target.b
                 );
 
                 // If it's way outside tolerance, skip immediately (protects distinct subject)
@@ -862,25 +860,23 @@ const App = {
 
                 if (dist < forceRemovalThreshold) {
                     shouldProcess = true; // Force remove background islands
-                } else {
+                } else if (alpha < 255) {
                     // Standard Edge Check for "Fuzzy" zone
-                    if (alpha < 255) {
-                        shouldProcess = true;
-                    } else {
-                        // Check neighbors
-                        const neighbors = [
-                            { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
-                            { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
-                        ];
-                        for (let n of neighbors) {
-                            const nx = px + n.dx;
-                            const ny = py + n.dy;
-                            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                                const nIdx = (ny * width + nx) * 4;
-                                if (data[nIdx + 3] < 255) {
-                                    shouldProcess = true;
-                                    break;
-                                }
+                    shouldProcess = true;
+                } else {
+                    // Check neighbors
+                    const neighbors = [
+                        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+                        { dx: 0, dy: -1 }, { dx: 0, dy: 1 }
+                    ];
+                    for (let n of neighbors) {
+                        const nx = px + n.dx;
+                        const ny = py + n.dy;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            const nIdx = (ny * width + nx) * 4;
+                            if (data[nIdx + 3] < 255) {
+                                shouldProcess = true;
+                                break;
                             }
                         }
                     }
@@ -1190,15 +1186,14 @@ resetCanvas() {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-    window.addEventListener('keydown', (e) => {
+    globalThis.addEventListener('keydown', (e) => {
         if(e.code === 'Space' && e.target == document.body) e.preventDefault();
     });
 
     // Prevent accidental navigation/refresh
-    window.addEventListener('beforeunload', (e) => {
+    globalThis.addEventListener('beforeunload', (e) => {
         if (App.hasUnsavedChanges()) {
             e.preventDefault();
-            e.returnValue = ''; // Chrome requires returnValue to be set
         }
     });
 
