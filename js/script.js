@@ -742,6 +742,27 @@ const App = {
                     data[idx + 3] = newAlpha;
                     modified = true;
                 }
+
+                // 4. Color Decontamination (Spill Removal)
+                // Push color away from background to remove halo cast
+                // We only apply this to semi-transparent pixels to avoid hard seams on solid subject parts
+                if (newAlpha > 0 && newAlpha < 250) { 
+                    const spillStrength = 0.7;
+                    const dr = pr - target.r;
+                    const dg = pg - target.g;
+                    const db = pb - target.b;
+
+                    const nr = Math.max(0, Math.min(255, pr + dr * spillStrength));
+                    const ng = Math.max(0, Math.min(255, pg + dg * spillStrength));
+                    const nb = Math.max(0, Math.min(255, pb + db * spillStrength));
+
+                    if (data[idx] !== nr || data[idx+1] !== ng || data[idx+2] !== nb) {
+                        data[idx] = nr;
+                        data[idx+1] = ng;
+                        data[idx+2] = nb;
+                        modified = true;
+                    }
+                }
             }
         }
 
