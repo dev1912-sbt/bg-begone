@@ -38,7 +38,7 @@ const App = {
     init() {
         const savedLimit = localStorage.getItem('bgRemover_maxHistory');
         if (savedLimit) {
-            this.maxHistoryStates = parseInt(savedLimit);
+            this.maxHistoryStates = Number.parseInt(savedLimit);
         }
 
         this.bindEvents();
@@ -65,8 +65,8 @@ const App = {
         });
 
         document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-            let newLimit = parseInt(historyInput.value);
-            if (isNaN(newLimit) || newLimit < 5) newLimit = 5;
+            let newLimit = Number.parseInt(historyInput.value);
+            if (Number.isNaN(newLimit) || newLimit < 5) newLimit = 5;
             if (newLimit > 100) newLimit = 100;
             
             this.maxHistoryStates = newLimit;
@@ -103,11 +103,11 @@ const App = {
             
             if (this.img) {
                 if (confirm('Opening a new image will discard your current changes. Continue?')) {
-                    // input.value = ''; // Commented out to debug
+                    input.value = '';
                     setTimeout(() => input.click(), 10);
                 }
             } else {
-                // input.value = ''; // Commented out to debug
+                input.value = '';
                 setTimeout(() => input.click(), 10);
             }
         });
@@ -116,7 +116,7 @@ const App = {
         const emptyState = document.getElementById('emptyState');
         emptyState.addEventListener('click', () => {
             const input = document.getElementById('imageInput');
-            // input.value = '';
+            input.value = '';
             setTimeout(() => input.click(), 10);
         });
         
@@ -139,7 +139,7 @@ const App = {
             
             if (this.img) return;
 
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            if (e.dataTransfer.files?.[0]) {
                 this.handleFile(e.dataTransfer.files[0]);
             }
         });
@@ -152,7 +152,7 @@ const App = {
         document.querySelectorAll('.setting-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const targetId = btn.getAttribute('data-target');
+                const targetId = btn.dataset.target;
                 const popup = document.getElementById('slider-popup');
                 const allGroups = document.querySelectorAll('.slider-group');
                 const targetGroup = document.getElementById(targetId);
@@ -207,7 +207,7 @@ const App = {
 
         const brushSizeInput = document.getElementById('brush-size');
         brushSizeInput.addEventListener('input', (e) => {
-            this.settings.brushSize = parseInt(e.target.value);
+            this.settings.brushSize = Number.parseInt(e.target.value);
             document.getElementById('val-size').innerText = e.target.value + 'px';
             this.showBrushPreview(this.settings.brushSize);
         });
@@ -215,26 +215,26 @@ const App = {
         brushSizeInput.addEventListener('touchend', () => this.hideBrushPreview(1000));
         this.addSliderWheelSupport(brushSizeInput);
 
-        this.bindSlider('brush-feather', 'val-feather', (v) => { this.settings.brushFeather = parseInt(v) / 100; }, '%');
-        this.bindSlider('brush-opacity', 'val-opacity', (v) => { this.settings.brushOpacity = parseInt(v) / 100; }, '%');
+        this.bindSlider('brush-feather', 'val-feather', (v) => { this.settings.brushFeather = Number.parseInt(v) / 100; }, '%');
+        this.bindSlider('brush-opacity', 'val-opacity', (v) => { this.settings.brushOpacity = Number.parseInt(v) / 100; }, '%');
 
         this.bindSlider('magic-tolerance', 'val-tolerance', (v) => { 
-            this.settings.magicTolerance = parseInt(v); 
+            this.settings.magicTolerance = Number.parseInt(v); 
             this.triggerMagicUpdate();
         }, '');
         this.bindSlider('magic-opacity', 'val-magic-opacity', (v) => { 
-            this.settings.magicOpacity = parseInt(v) / 100; 
+            this.settings.magicOpacity = Number.parseInt(v) / 100; 
             this.triggerMagicUpdate();
         }, '%');
         this.bindSlider('magic-smoothness', 'val-smoothness', (v) => {
-            this.settings.magicSmoothness = parseInt(v);
+            this.settings.magicSmoothness = Number.parseInt(v);
             this.triggerMagicUpdate();
         }, '');
 
         // Refine Tool Sliders
         const refineSizeInput = document.getElementById('refine-size');
         refineSizeInput.addEventListener('input', (e) => {
-            this.settings.refineSize = parseInt(e.target.value);
+            this.settings.refineSize = Number.parseInt(e.target.value);
             document.getElementById('val-refine-size').innerText = e.target.value + 'px';
             this.showBrushPreview(this.settings.refineSize);
         });
@@ -243,7 +243,7 @@ const App = {
         this.addSliderWheelSupport(refineSizeInput);
 
         this.bindSlider('refine-tolerance', 'val-refine-tolerance', (v) => { 
-            this.settings.refineTolerance = parseInt(v); 
+            this.settings.refineTolerance = Number.parseInt(v); 
         }, '');
 
         this.viewport.addEventListener('mousedown', (e) => this.handleMouseDown(e));
