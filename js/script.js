@@ -864,6 +864,10 @@ resetCanvas() {
         link.download = 'background-removed.png';
         link.href = this.canvas.toDataURL('image/png');
         link.click();
+    },
+
+    hasUnsavedChanges() {
+        return this.img !== null && this.historyIndex > 0;
     }
 };
 
@@ -871,5 +875,14 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('keydown', (e) => {
         if(e.code === 'Space' && e.target == document.body) e.preventDefault();
     });
+
+    // Prevent accidental navigation/refresh
+    window.addEventListener('beforeunload', (e) => {
+        if (App.hasUnsavedChanges()) {
+            e.preventDefault();
+            e.returnValue = ''; // Chrome requires returnValue to be set
+        }
+    });
+
     App.init();
 });
