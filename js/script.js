@@ -15,6 +15,7 @@ const App = {
     offset: { x: 0, y: 0 },
     isDrawing: false,
     isSpacePressed: false,
+    isResizingBrush: false,
     currentTool: 'manual',
     
     activeMagicWand: null,
@@ -239,6 +240,23 @@ const App = {
         window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         
+        // Prevent context menu on canvas for brush resizing
+        this.canvas.addEventListener('contextmenu', (e) => {
+            if (e.altKey) e.preventDefault();
+        });
+
+        // Help Modal
+        const helpModal = document.getElementById('helpModal');
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            helpModal.classList.remove('hidden');
+        });
+        document.getElementById('closeHelpBtn').addEventListener('click', () => {
+            helpModal.classList.add('hidden');
+        });
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.classList.add('hidden');
+        });
+
         window.addEventListener('keyup', (e) => {
             if (e.code === 'Space') {
                 this.isSpacePressed = false;
@@ -295,6 +313,9 @@ const App = {
         }
         if (e.key.toLowerCase() === 'w') {
             this.toggleTools('magic');
+        }
+        if (e.key.toLowerCase() === 'r') {
+            this.toggleTools('refine');
         }
 
         // Settings Shortcuts
@@ -561,6 +582,15 @@ const App = {
     handleMouseDown(e) {
         if (!this.img) return;
 
+        // Brush Resizing (Alt + Right Click)
+        if (e.altKey && e.button === 2) {
+            e.preventDefault();
+            this.isResizingBrush = true;
+            this.resizeStartX = e.clientX;
+            this.initialBrushSize = this.currentTool === 'refine' ? this.settings.refineSize : this.settings.brushSize;
+            return;
+        }
+
         if (e.button === 1 || (e.button === 0 && this.isSpacePressed)) { 
             this.panning = true;
             this.panStart = { x: e.clientX, y: e.clientY };
@@ -571,6 +601,11 @@ const App = {
         if (e.button !== 0) return;
 
         const pos = this.getCanvasCoordinates(e);
+
+        // Visual feedback for cursor
+        const cursor = document.getElementById('custom-cursor');
+        cursor.classList.add('bg-white/10', 'border-white/90');
+        cursor.classList.remove('border-white/50');
 
         if (this.currentTool === 'manual') {
             this.activeMagicWand = null;
@@ -586,6 +621,41 @@ const App = {
     },
 
     handleMouseMove(e) {
+        const cursor = document.getElementById('custom-cursor');
+        const isOverCanvas = e.target === this.canvas || e.target.closest('#viewport');
+
+        // Handle Brush Resizing
+        if (this.isResizingBrush) {
+            const delta = e.clientX - this.resizeStartX;
+            let newSize = this.initialBrushSize + delta;
+            newSize = Math.max(1, Math.min(200, newSize));
+
+            if (this.currentTool === 'refine') {
+                this.settings.refineSize = newSize;
+                document.getElementById('refine-size').value = newSize;
+                document.getElementById('val-refine-size').innerText = newSize + 'px';
+            } else {
+                this.settings.brushSize = newSize;
+                document.getElementById('brush-size').value = newSize;
+                document.getElementById('val-size').innerText = newSize + 'px';
+            }
+        }
+
+        // Update Custom Cursor
+        if (this.img && (this.currentTool === 'manual' || this.currentTool === 'refine') && (isOverCanvas || this.isResizingBrush)) {
+            cursor.classList.remove('hidden');
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+            this.canvas.style.cursor = 'none';
+            
+            const size = this.currentTool === 'refine' ? this.settings.refineSize : this.settings.brushSize;
+            const displaySize = size * this.scale;
+            cursor.style.width = `${displaySize}px`;
+            cursor.style.height = `${displaySize}px`;
+        } else {
+            cursor.classList.add('hidden');
+            this.canvas.style.cursor = 'default';
+        }
+
         if (this.panning) {
             const dx = (e.clientX - this.panStart.x) / this.scale;
             const dy = (e.clientY - this.panStart.y) / this.scale;
@@ -608,6 +678,16 @@ const App = {
     },
 
     handleMouseUp(e) {
+        if (this.isResizingBrush) {
+            this.isResizingBrush = false;
+            return;
+        }
+
+        // Reset cursor visual
+        const cursor = document.getElementById('custom-cursor');
+        cursor.classList.remove('bg-white/10', 'border-white/90');
+        cursor.classList.add('border-white/50');
+
         if (this.panning) {
             this.panning = false;
             this.viewport.parentElement.classList.remove('panning');

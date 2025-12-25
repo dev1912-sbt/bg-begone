@@ -176,6 +176,10 @@
                 <button id="resetBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all" data-tooltip="Reset Image">
                     <i class="fas fa-history"></i>
                 </button>
+                <div class="w-px h-6 bg-slate-600 mx-1"></div>
+                <button id="helpBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-theme hover:bg-slate-700 transition-all" data-tooltip="Help & Shortcuts">
+                    <i class="fas fa-question"></i>
+                </button>
             </div>
         </div>
 
@@ -264,6 +268,68 @@
     <!-- The Single Global Tooltip Element -->
     <div id="global-tooltip"></div>
 
+    <!-- Custom Cursor Follower -->
+    <div id="custom-cursor" class="fixed pointer-events-none z-50 rounded-full border-2 border-white/50 shadow-[0_0_10px_rgba(0,0,0,0.5)] hidden transition-transform duration-75 ease-out will-change-transform"></div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col overflow-hidden">
+            <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex justify-between items-center shrink-0">
+                <h3 class="font-title text-3xl text-theme">Help & Shortcuts</h3>
+                <button id="closeHelpBtn" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 text-slate-300">
+                
+                <!-- Shortcuts Section -->
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-3 border-b border-slate-700 pb-1">Keyboard Shortcuts</h4>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-slate-400">Manual Brush</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">B</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Magic Wand</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">W</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Refine Edge</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">R</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Undo</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">Ctrl + Z</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Redo</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">Ctrl + Y</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Pan Canvas</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">Space + Drag</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Resize Brush</span> <span class="font-mono text-theme bg-slate-900 px-2 rounded">Alt + Right Click Drag</span></div>
+                    </div>
+                </div>
+
+                <!-- Tools Section -->
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-3 border-b border-slate-700 pb-1">Tools Guide</h4>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fas fa-eraser text-theme"></i>
+                            <span class="font-bold text-white">Manual Brush</span>
+                        </div>
+                        <p class="text-sm leading-relaxed">Standard eraser. Use it to manually remove parts of the background. Adjust size, softness (feather), and opacity for precise control.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fas fa-wand-magic-sparkles text-theme"></i>
+                            <span class="font-bold text-white">Magic Wand</span>
+                        </div>
+                        <p class="text-sm leading-relaxed">Click to automatically remove connected areas of similar color. Adjust 'Tolerance' to control how strict the color matching is.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fas fa-mask text-theme"></i>
+                            <span class="font-bold text-white">Refine Edge</span>
+                        </div>
+                        <p class="text-sm leading-relaxed">Perfect for hair and complex edges. First, use the Magic Wand to set the "Target Color", then paint over the edges. The tool will intelligently remove the background color while preserving the subject.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-cursor" class="fixed pointer-events-none border-2 border-white/50 rounded-full z-50 hidden transition-transform duration-75 ease-out -translate-x-1/2 -translate-y-1/2 will-change-transform"></div>
     <script src="js/script.js"></script>
 </body>
 </html>
