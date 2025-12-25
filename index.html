@@ -11,6 +11,9 @@
     <link rel="manifest" href="assets/site.webmanifest" />
     <title>Background Remover</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geo:ital@0;1&family=Parisienne&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -20,18 +23,18 @@
     <header class="h-14 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4 shrink-0 z-20">
         <div class="flex items-center gap-2">
             <img src="assets/favicon.svg" alt="Logo" class="w-8 h-8">
-            <h1 class="font-semibold text-lg tracking-tight">Background<span class="text-theme">Begone</span></h1>
+            <h1 class="font-semibold tracking-tight">Background<span class="text-theme">Begone</span></h1>
         </div>
         
         <div class="flex items-center gap-3">
             <input type="file" id="imageInput" accept="image/*" class="hidden">
-            <button id="resetCanvasBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2 mr-2" data-tooltip="Reset everything to start over">
+            <button id="resetCanvasBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors flex items-center gap-2 mr-2" data-tooltip="Reset everything to start over">
                 <i class="fas fa-trash-alt"></i> Reset Canvas
             </button>
-            <button id="openImageBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2" data-tooltip="Import an image to start editing">
+            <button id="openImageBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors flex items-center gap-2" data-tooltip="Import an image to start editing">
                 <i class="fas fa-folder-open"></i> Open Image
             </button>
-            <button id="downloadBtn" class="btn-primary px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" data-tooltip="Save your masterpiece as PNG">
+            <button id="downloadBtn" class="btn-primary px-3 py-1.5 rounded transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" data-tooltip="Save your masterpiece as PNG">
                 <i class="fas fa-download"></i> Export
             </button>
             <button id="settingsBtn" class="bg-slate-700 hover:bg-slate-600 w-8 h-8 rounded flex items-center justify-center text-slate-300 transition-colors" data-tooltip="Settings">
@@ -51,13 +54,13 @@
             </div>
             <div class="p-4 space-y-4">
                 <div class="space-y-2">
-                    <label for="historyLimitInput" class="block text-sm font-medium text-slate-300">Max History States (Undo/Redo)</label>
-                    <input type="number" id="historyLimitInput" min="5" max="100" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-theme text-sm">
-                    <p class="text-xs text-slate-500">Higher values use more memory. Default: 50</p>
+                    <label for="historyLimitInput" class="block font-medium text-slate-300">Max History States (Undo/Redo)</label>
+                    <input type="number" id="historyLimitInput" min="5" max="100" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-theme">
+                    <p class="text-slate-500">Higher values use more memory. Default: 50</p>
                 </div>
             </div>
             <div class="bg-slate-900/50 px-4 py-3 border-t border-slate-700 flex justify-end">
-                <button id="saveSettingsBtn" class="btn-primary px-4 py-2 rounded text-sm transition-colors">
+                <button id="saveSettingsBtn" class="btn-primary px-4 py-2 rounded transition-colors">
                     Save Changes
                 </button>
             </div>
@@ -86,7 +89,7 @@
             <!-- Floating Controls (Zoom) -->
             <div class="absolute bottom-6 right-6 flex items-center gap-2 bg-slate-800/80 backdrop-blur p-2 rounded-lg shadow-lg border border-slate-700 z-30">
                 <button id="zoomOut" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom Out"><i class="fas fa-minus"></i></button>
-                <span id="zoomLevel" class="text-xs font-mono w-12 text-center">100%</span>
+                <span id="zoomLevel" class="font-mono w-12 text-center">100%</span>
                 <button id="zoomIn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" data-tooltip="Zoom In"><i class="fas fa-plus"></i></button>
                 <div class="w-px h-4 bg-slate-600 mx-1"></div>
                 <button id="fitScreen" class="w-8 h-8 flex items-center justify-center hover:bg-slate-700 rounded" title="Fit to Screen" data-tooltip="Fit to Screen"><i class="fas fa-compress"></i></button>
@@ -95,16 +98,16 @@
             <!-- Empty State -->
             <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 cursor-pointer z-0 hover:bg-slate-800/50 transition-colors">
                 <i class="fas fa-cloud-upload-alt text-6xl mb-4 opacity-50"></i>
-                <p class="text-xl font-semibold">No image loaded</p>
-                <p class="text-base opacity-90">Click or Drop an image to start</p>
-                <p id="errorMsg" class="text-red-400 text-sm mt-4 hidden font-bold bg-red-900/20 px-3 py-1 rounded border border-red-500/30"></p>
+                <p class="font-semibold">No image loaded</p>
+                <p class="opacity-90">Click or Drop an image to start</p>
+                <p id="errorMsg" class="text-red-400 mt-4 hidden font-bold bg-red-900/20 px-3 py-1 rounded border border-red-500/30"></p>
             </div>
 
             <!-- Loader -->
             <div id="loader" class="absolute inset-0 flex items-center justify-center bg-slate-900/50 hidden z-50">
                 <div class="flex flex-col items-center">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-theme mb-2"></i>
-                    <span class="text-sm font-semibold">Processing Pixels...</span>
+                    <span class="font-semibold">Processing Pixels...</span>
                 </div>
             </div>
         </main>
@@ -115,51 +118,51 @@
             <!-- Section 1: Modes -->
             <div class="flex items-center gap-1 pr-3 border-r border-slate-600">
                 <button id="tool-manual" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Manual Brush (B)">
-                    <i class="fas fa-eraser text-lg"></i>
+                    <i class="fas fa-eraser"></i>
                 </button>
                 <button id="tool-magic" class="tool-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Magic Wand (W)">
-                    <i class="fas fa-wand-magic-sparkles text-lg"></i>
+                    <i class="fas fa-wand-magic-sparkles"></i>
                 </button>
             </div>
 
             <!-- Section 2: Contextual Settings -->
             <div id="options-manual" class="flex items-center gap-2 px-1">
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-size" data-tooltip="Brush Size">
-                    <i class="fas fa-circle text-sm"></i>
+                    <i class="fas fa-circle"></i>
                 </button>
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-feather" data-tooltip="Softness">
-                    <i class="fas fa-feather-alt text-sm"></i>
+                    <i class="fas fa-feather-alt"></i>
                 </button>
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-brush-opacity" data-tooltip="Opacity (O)">
-                    <i class="fas fa-adjust text-sm"></i>
+                    <i class="fas fa-adjust"></i>
                 </button>
             </div>
 
             <div id="options-magic" class="hidden flex items-center gap-2 px-1">
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-tolerance" data-tooltip="Tolerance (F)">
-                    <i class="fas fa-bullseye text-sm"></i>
+                    <i class="fas fa-bullseye"></i>
                 </button>
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-smoothness" data-tooltip="Smoothness (S)">
-                    <i class="fas fa-water text-sm"></i>
+                    <i class="fas fa-water"></i>
                 </button>
                 <button class="setting-trigger w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-target="setting-magic-opacity" data-tooltip="Removal Opacity (O)">
-                    <i class="fas fa-ghost text-sm"></i>
+                    <i class="fas fa-ghost"></i>
                 </button>
             </div>
 
             <!-- Section 3: Actions -->
             <div class="flex items-center gap-1 pl-3 border-l border-slate-600">
                 <button id="undoBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30" data-tooltip="Undo (Ctrl+Z)">
-                    <i class="fas fa-undo text-sm"></i>
+                    <i class="fas fa-undo"></i>
                 </button>
                 <button id="redoBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30" data-tooltip="Redo (Ctrl+Y)">
-                    <i class="fas fa-redo text-sm"></i>
+                    <i class="fas fa-redo"></i>
                 </button>
                 <button id="compareBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all" data-tooltip="Hold to Compare">
-                    <i class="fas fa-eye text-sm"></i>
+                    <i class="fas fa-eye"></i>
                 </button>
                 <button id="resetBtn" class="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all" data-tooltip="Reset Image">
-                    <i class="fas fa-history text-sm"></i>
+                    <i class="fas fa-history"></i>
                 </button>
             </div>
         </div>
@@ -169,7 +172,7 @@
             
             <!-- Brush Size -->
             <div id="setting-brush-size" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Brush Size</span>
                     <span id="val-size">50px</span>
                 </div>
@@ -178,7 +181,7 @@
 
             <!-- Brush Feather -->
             <div id="setting-brush-feather" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Feather</span>
                     <span id="val-feather">50%</span>
                 </div>
@@ -187,7 +190,7 @@
 
             <!-- Brush Opacity -->
             <div id="setting-brush-opacity" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Opacity</span>
                     <span id="val-opacity">100%</span>
                 </div>
@@ -196,12 +199,12 @@
 
             <!-- Magic Tolerance -->
             <div id="setting-magic-tolerance" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Tolerance</span>
                     <span id="val-tolerance">20</span>
                 </div>
                 <input type="range" id="magic-tolerance" min="0" max="100" value="20" class="w-full accent-theme">
-                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                <div class="flex justify-between text-slate-500 mt-1">
                     <span>Strict</span>
                     <span>Loose</span>
                 </div>
@@ -209,7 +212,7 @@
 
             <!-- Magic Smoothness -->
             <div id="setting-magic-smoothness" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Smoothness</span>
                     <span id="val-smoothness">0</span>
                 </div>
@@ -218,7 +221,7 @@
 
             <!-- Magic Opacity -->
             <div id="setting-magic-opacity" class="slider-group hidden">
-                <div class="flex justify-between text-xs text-slate-300 mb-2">
+                <div class="flex justify-between text-slate-300 mb-2">
                     <span class="font-bold uppercase">Removal Opacity</span>
                     <span id="val-magic-opacity">100%</span>
                 </div>
