@@ -318,22 +318,30 @@ const App = {
             this.toggleTools('refine');
         }
 
-        // Settings Shortcuts
+        // Settings Shortcuts (F-S-O Pattern)
         if (e.key.toLowerCase() === 'f') {
-            if (this.currentTool === 'magic') {
+            if (this.currentTool === 'manual') {
+                this.triggerSettingPopup('setting-brush-size');
+            } else if (this.currentTool === 'refine') {
+                this.triggerSettingPopup('setting-refine-size');
+            } else if (this.currentTool === 'magic') {
                 this.triggerSettingPopup('setting-magic-tolerance');
             }
         }
         if (e.key.toLowerCase() === 's') {
-            if (this.currentTool === 'magic') {
+            if (this.currentTool === 'manual') {
+                this.triggerSettingPopup('setting-brush-feather');
+            } else if (this.currentTool === 'refine') {
+                this.triggerSettingPopup('setting-refine-tolerance');
+            } else if (this.currentTool === 'magic') {
                 this.triggerSettingPopup('setting-magic-smoothness');
             }
         }
         if (e.key.toLowerCase() === 'o') {
-            if (this.currentTool === 'magic') {
-                this.triggerSettingPopup('setting-magic-opacity');
-            } else {
+            if (this.currentTool === 'manual') {
                 this.triggerSettingPopup('setting-brush-opacity');
+            } else if (this.currentTool === 'magic') {
+                this.triggerSettingPopup('setting-magic-opacity');
             }
         }
     },
