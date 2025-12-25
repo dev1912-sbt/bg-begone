@@ -39,7 +39,36 @@ const App = {
     bindEvents() {
         document.getElementById('imageInput').addEventListener('change', (e) => this.handleImageUpload(e));
         document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
+        document.getElementById('resetCanvasBtn').addEventListener('click', () => this.resetCanvas());
         
+        // Empty State Interactions
+        const emptyState = document.getElementById('emptyState');
+        emptyState.addEventListener('click', () => document.getElementById('imageInput').click());
+        
+        // Drag and Drop
+        const dropZone = document.body; // Allow dropping anywhere
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!this.img) emptyState.classList.add('bg-slate-800/80');
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            if (!this.img) emptyState.classList.remove('bg-slate-800/80');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!this.img) emptyState.classList.remove('bg-slate-800/80');
+            
+            if (this.img) return;
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                this.handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
         document.getElementById('tool-manual').addEventListener('click', () => this.toggleTools('manual'));
         document.getElementById('tool-magic').addEventListener('click', () => this.toggleTools('magic'));
 
@@ -198,12 +227,28 @@ const App = {
     handleImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
+        this.handleFile(file);
+    },
+
+    handleFile(file) {
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.classList.add('hidden');
+
+        if (!file.type.startsWith('image/')) {
+            errorMsg.textContent = "Error: Please upload a valid image file (PNG, JPG, etc.)";
+            errorMsg.classList.remove('hidden');
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = (event) => {
             this.img = new Image();
             this.img.onload = () => {
                 this.setupCanvas();
+            };
+            this.img.onerror = () => {
+                errorMsg.textContent = "Error: Could not load image data.";
+                errorMsg.classList.remove('hidden');
             };
             this.img.src = event.target.result;
         };
@@ -222,6 +267,8 @@ const App = {
         this.historyIndex = -1;
         this.saveState();
 
+        this.viewport.classList.remove('hidden');
+        this.canvas.classList.remove('hidden');
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('downloadBtn').disabled = false;
         this.fitToScreen();
@@ -555,12 +602,23 @@ const App = {
         this.ctx.putImageData(this.originalImageData, 0, 0);
         this.saveState();
     },
-
-    startCompare() {
-        if (!this.img) return;
-        const current = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.putImageData(this.originalImageData, 0, 0);
-        this.tempCompareData = current;
+resetCanvas() {
+        this.img = null;
+        this.originalImageData = null;
+        this.history = [];
+        this.historyIndex = -1;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        document.getElementById('emptyState').classList.remove('hidden');
+        this.viewport.classList.add('hidden');
+        this.canvas.classList.add('hidden');
+        document.getElementById('downloadBtn').disabled = true;
+        document.getElementById('imageInput').value = '';
+        document.getElementById('errorMsg').classList.add('hidden');
+        
+        this.scale = 1;
+        this.offset = { x: 0, y: 0 };
+        this.updateTransform();
     },
 
     endCompare() {
