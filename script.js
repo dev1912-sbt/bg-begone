@@ -8,6 +8,7 @@ const App = {
     originalImageData: null,
     history: [],
     historyIndex: -1,
+    maxHistoryStates: 50,
     scale: 1,
     panning: false,
     panStart: { x: 0, y: 0 },
@@ -30,6 +31,11 @@ const App = {
     },
 
     init() {
+        const savedLimit = localStorage.getItem('bgRemover_maxHistory');
+        if (savedLimit) {
+            this.maxHistoryStates = parseInt(savedLimit);
+        }
+
         this.bindEvents();
         this.initTooltips();
         this.updateUI();
@@ -39,7 +45,63 @@ const App = {
     bindEvents() {
         document.getElementById('imageInput').addEventListener('change', (e) => this.handleImageUpload(e));
         document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
-        document.getElementById('resetCanvasBtn').addEventListener('click', () => this.resetCanvas());
+        
+        // Settings Modal
+        const settingsModal = document.getElementById('settingsModal');
+        const historyInput = document.getElementById('historyLimitInput');
+
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            historyInput.value = this.maxHistoryStates;
+            settingsModal.classList.remove('hidden');
+        });
+
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+            let newLimit = parseInt(historyInput.value);
+            if (isNaN(newLimit) || newLimit < 5) newLimit = 5;
+            if (newLimit > 100) newLimit = 100;
+            
+            this.maxHistoryStates = newLimit;
+            localStorage.setItem('bgRemover_maxHistory', newLimit);
+            
+            // Trim current history if needed
+            if (this.history.length > this.maxHistoryStates) {
+                const diff = this.history.length - this.maxHistoryStates;
+                this.history.splice(0, diff);
+                this.historyIndex -= diff;
+                if (this.historyIndex < 0) this.historyIndex = 0;
+            }
+            
+            settingsModal.classList.add('hidden');
+            this.updateUI();
+        });
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.add('hidden');
+        });
+
+        document.getElementById('resetCanvasBtn').addEventListener('click', () => {
+            if (this.img) {
+                if (confirm('Are you sure you want to reset the canvas? All unsaved changes will be lost.')) {
+                    this.resetCanvas();
+                }
+            } else {
+                this.resetCanvas();
+            }
+        });
+
+        document.getElementById('openImageBtn').addEventListener('click', () => {
+            if (this.img) {
+                if (confirm('Opening a new image will discard your current changes. Continue?')) {
+                    document.getElementById('imageInput').click();
+                }
+            } else {
+                document.getElementById('imageInput').click();
+            }
+        });
         
         // Empty State Interactions
         const emptyState = document.getElementById('emptyState');
@@ -563,7 +625,7 @@ const App = {
             this.history = this.history.slice(0, this.historyIndex + 1);
         }
         
-        if (this.history.length > 20) {
+        if (this.history.length > this.maxHistoryStates) {
             this.history.shift();
             this.historyIndex--;
         }

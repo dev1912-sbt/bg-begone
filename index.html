@@ -22,14 +22,41 @@
             <button id="resetCanvasBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2 mr-2" data-tooltip="Reset everything to start over">
                 <i class="fas fa-trash-alt"></i> Reset Canvas
             </button>
-            <button onclick="document.getElementById('imageInput').click()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2" data-tooltip="Import an image to start editing">
+            <button id="openImageBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2" data-tooltip="Import an image to start editing">
                 <i class="fas fa-folder-open"></i> Open Image
             </button>
             <button id="downloadBtn" class="btn-primary px-3 py-1.5 rounded text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" data-tooltip="Save your masterpiece as PNG">
                 <i class="fas fa-download"></i> Export
             </button>
+            <button id="settingsBtn" class="bg-slate-700 hover:bg-slate-600 w-8 h-8 rounded flex items-center justify-center text-slate-300 transition-colors" data-tooltip="Settings">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
     </header>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-slate-800 border border-slate-700 rounded-lg shadow-xl w-80 overflow-hidden">
+            <div class="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-semibold text-slate-200">Settings</h3>
+                <button id="closeSettingsBtn" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="space-y-2">
+                    <label for="historyLimitInput" class="block text-sm font-medium text-slate-300">Max History States (Undo/Redo)</label>
+                    <input type="number" id="historyLimitInput" min="5" max="100" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-theme text-sm">
+                    <p class="text-xs text-slate-500">Higher values use more memory. Default: 50</p>
+                </div>
+            </div>
+            <div class="bg-slate-900/50 px-4 py-3 border-t border-slate-700 flex justify-end">
+                <button id="saveSettingsBtn" class="btn-primary px-4 py-2 rounded text-sm transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Workspace -->
     <div class="flex-1 flex overflow-hidden">
